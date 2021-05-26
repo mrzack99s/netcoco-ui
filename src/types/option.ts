@@ -1,6 +1,7 @@
-interface TopoOption {
+interface Option {
     text?: string;
     value?: any;
+    key?: string
 }
-  
-export default TopoOption;
+
+export default Option;

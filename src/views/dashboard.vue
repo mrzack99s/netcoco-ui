@@ -1,9 +1,25 @@
 <template>
-  <sui-tab :menu="{ vertical: true, fluid: true }" menu-position="left">
-    <sui-tab-pane title="Topology">
-      <Topology height="550px"/>
-    </sui-tab-pane>
-  </sui-tab>
+  <div>
+    <sui-segment clearing basic>
+      <h4 is="sui-header" floated="right">
+        <sui-icon name="hand pointer outline" />
+        <sui-header-content>Click on device for configure</sui-header-content>
+      </h4>
+      <h2 is="sui-header" floated="left">
+        <sui-icon name="server" />
+        <sui-header-content
+          >Dashboard
+          <sui-header-subheader>Overview system</sui-header-subheader>
+        </sui-header-content>
+      </h2>
+    </sui-segment>
+
+    <sui-tab :menu="{ vertical: true, fluid: true }" menu-position="left">
+      <sui-tab-pane title="Topology">
+        <Topology height="450px" />
+      </sui-tab-pane>
+    </sui-tab>
+  </div>
 </template>
 
 <script lang="ts">
@@ -14,7 +30,7 @@ export default Vue.extend({
     Topology,
   },
   metaInfo: {
-    title: "Dashboard",
+    title: "Dashboard | NetCoCo",
   },
   data() {
     return {

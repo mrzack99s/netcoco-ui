@@ -26,8 +26,9 @@
         <sui-table-row>
           <sui-table-header-cell>Name</sui-table-header-cell>
           <sui-table-header-cell>Hostname</sui-table-header-cell>
-          <sui-table-header-cell>Username</sui-table-header-cell>
-          <sui-table-header-cell>Device Type</sui-table-header-cell>
+          <sui-table-header-cell>SSH Port</sui-table-header-cell>
+          <sui-table-header-cell>Platform</sui-table-header-cell>
+          <sui-table-header-cell>Type</sui-table-header-cell>
           <sui-table-header-cell />
         </sui-table-row>
       </sui-table-header>
@@ -35,28 +36,28 @@
         <sui-table-row v-for="(device, index) in tableFilter" :key="device.id">
           <sui-table-cell>{{ device.device_name }}</sui-table-cell>
           <sui-table-cell>{{ device.device_hostname }}</sui-table-cell>
-          <sui-table-cell>{{ device.device_username }}</sui-table-cell>
+          <sui-table-cell>{{ device.device_ssh_port }}</sui-table-cell>
+          <sui-table-cell>{{
+            device.edges.in_platform.device_platform_name
+          }}</sui-table-cell>
           <sui-table-cell>{{
             device.edges.in_type.device_type_name
           }}</sui-table-cell>
           <sui-table-cell collapsing>
             <sui-button
+              icon="plus"
+              color="blue"
+              content="interface"
               size="mini"
-              primary
-              labeled
               @click="addInterface(index)"
-              style="margin-right: 0.5em"
-            >
-              <sui-icon name="plus" /> Add Interface
-            </sui-button>
+            />
             <sui-button
+              icon="minus"
+              color="grey"
+              content="interface"
               size="mini"
-              labeled
               @click="cleanInterface(index)"
-              style="margin-right: 0.5em"
-            >
-              <sui-icon name="minus" /> Clean Interface
-            </sui-button>
+            />
 
             <sui-icon name="edit" link color="yellow" @click="edit(index)" />
             <sui-icon
@@ -99,52 +100,66 @@
       <sui-modal v-model="addModal" :closable="false">
         <sui-modal-header>Add device </sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-
-          <sui-form @submit.prevent="add" v-else>
+          <sui-form @submit.prevent="add" :loading="loader">
             <sui-divider horizontal style="margin-bottom: 2em"
               ><sui-icon size="large" name="info circle" /> Device
               Information</sui-divider
             >
-            <sui-form-field>
-              <sui-form-fields fields="three">
-                <sui-form-field width="seven">
-                  <label>Device Name</label>
-                  <input
-                    type="text"
-                    placeholder="Device Name"
-                    required
-                    v-model="addDevice.device_name"
-                  />
-                </sui-form-field>
-                <sui-form-field width="seven">
-                  <label>Device Hostname</label>
-                  <input
-                    type="text"
-                    placeholder="Device Hostname"
-                    required
-                    v-model="addDevice.device_hostname"
-                  />
-                </sui-form-field>
-                <sui-form-field>
-                  <label>Device Type</label>
-                  <sui-dropdown
-                    placeholder="Device Type"
-                    required
-                    selection
-                    :options="options"
-                    v-model="selectedOption"
-                  />
-                </sui-form-field>
-              </sui-form-fields>
-            </sui-form-field>
+            <sui-form-fields fields="three">
+              <sui-form-field width="seven">
+                <label>Device Name</label>
+                <input
+                  type="text"
+                  placeholder="Device Name"
+                  required
+                  v-model="addDevice.device_name"
+                />
+              </sui-form-field>
+              <sui-form-field width="seven">
+                <label>Device Hostname</label>
+                <input
+                  type="text"
+                  placeholder="Device Hostname"
+                  required
+                  v-model="addDevice.device_hostname"
+                />
+              </sui-form-field>
+              <sui-form-field>
+                <label>SSH Port</label>
+                <input
+                  type="text"
+                  placeholder="SSH Port"
+                  required
+                  v-model.number="addDevice.device_ssh_port"
+                />
+              </sui-form-field>
+            </sui-form-fields>
+
+            <sui-form-fields fields="two">
+              <sui-form-field>
+                <label>Device Type</label>
+                <sui-dropdown
+                  placeholder="Device Type"
+                  required
+                  search
+                  selection
+                  :options="options"
+                  v-model="selectedOption"
+                />
+              </sui-form-field>
+
+              <sui-form-field>
+                <label>Device Platform</label>
+                <sui-dropdown
+                  placeholder="Device Platform"
+                  required
+                  search
+                  selection
+                  :options="options2"
+                  v-model="selectedOption2"
+                />
+              </sui-form-field>
+            </sui-form-fields>
 
             <sui-divider horizontal style="margin: 2em 0"
               ><sui-icon size="large" name="lock" /> Authentication
@@ -176,7 +191,7 @@
                     type="password"
                     placeholder="Enable Secret"
                     required
-                    v-model="addDevice.device_enable_secret"
+                    v-model="addDevice.device_secret"
                   />
                 </sui-form-field>
               </sui-form-fields>
@@ -199,53 +214,67 @@
           >Edit devie id {{ selectedDevice.id }}
         </sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-
-          <sui-form @submit.prevent="update" v-else>
+          <sui-form @submit.prevent="update" :loading="loader">
             <sui-divider horizontal style="margin-bottom: 2em"
               ><sui-icon size="large" name="info circle" /> Device
               Information</sui-divider
             >
-            <sui-form-field>
-              <sui-form-fields fields="three">
-                <sui-form-field width="seven">
-                  <label>Device Name</label>
-                  <input
-                    type="text"
-                    placeholder="Device Name"
-                    required
-                    v-model="selectedDevice.device_name"
-                  />
-                </sui-form-field>
-                <sui-form-field width="seven">
-                  <label>Device Hostname</label>
-                  <input
-                    type="text"
-                    placeholder="Device Hostname"
-                    required
-                    v-model="selectedDevice.device_hostname"
-                  />
-                </sui-form-field>
-                <sui-form-field>
-                  <label>Device Type</label>
-                  <sui-dropdown
-                    placeholder="Device Type"
-                    required
-                    search
-                    selection
-                    :options="options"
-                    v-model="selectedOption"
-                  />
-                </sui-form-field>
-              </sui-form-fields>
-            </sui-form-field>
+
+            <sui-form-fields fields="three">
+              <sui-form-field width="seven">
+                <label>Device Name</label>
+                <input
+                  type="text"
+                  placeholder="Device Name"
+                  required
+                  v-model="selectedDevice.device_name"
+                />
+              </sui-form-field>
+              <sui-form-field width="seven">
+                <label>Device Hostname</label>
+                <input
+                  type="text"
+                  placeholder="Device Hostname"
+                  required
+                  v-model="selectedDevice.device_hostname"
+                />
+              </sui-form-field>
+              <sui-form-field>
+                <label>SSH Port</label>
+                <input
+                  type="text"
+                  placeholder="SSH Port"
+                  required
+                  v-model.number="selectedDevice.device_ssh_port"
+                />
+              </sui-form-field>
+            </sui-form-fields>
+
+            <sui-form-fields fields="two">
+              <sui-form-field>
+                <label>Device Type</label>
+                <sui-dropdown
+                  placeholder="Device Type"
+                  required
+                  search
+                  selection
+                  :options="options"
+                  v-model="selectedOption"
+                />
+              </sui-form-field>
+
+              <sui-form-field>
+                <label>Device Platform</label>
+                <sui-dropdown
+                  placeholder="Device Platform"
+                  required
+                  search
+                  selection
+                  :options="options2"
+                  v-model="selectedOption2"
+                />
+              </sui-form-field>
+            </sui-form-fields>
 
             <sui-divider horizontal style="margin: 2em 0"
               ><sui-icon size="large" name="lock" /> Authentication
@@ -275,7 +304,7 @@
                   <input
                     type="password"
                     placeholder="Enable Secret"
-                    v-model="selectedDevice.device_enable_secret"
+                    v-model="selectedDevice.device_secret"
                   />
                 </sui-form-field>
               </sui-form-fields>
@@ -296,16 +325,7 @@
       <sui-modal v-model="addIntModal" size="mini" :closable="false">
         <sui-modal-header>Generate interface</sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-
-          <sui-form @submit.prevent="generateInterface" v-else>
+          <sui-form @submit.prevent="generateInterface" :loading="loader">
             <sui-form-field>
               <label>Interface Prefix</label>
               <sui-input
@@ -357,15 +377,7 @@
       <sui-modal v-model="cleanModal" size="mini" :closable="false">
         <sui-modal-header>Are you sure to clean interface?</sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-          <div v-else>
+          <div :loading="loader">
             Device Hostname: <b>{{ selectedDevice.device_hostname }} </b><br />
             Device Name: <b>{{ selectedDevice.device_name }} </b> <br />
           </div>
@@ -384,15 +396,7 @@
       <sui-modal v-model="deleteModal" size="mini" :closable="false">
         <sui-modal-header>Are you sure to delete?</sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-          <div v-else>
+          <div :loading="loader">
             Device Hostname: <b>{{ selectedDevice.device_hostname }} </b><br />
             Device Name: <b>{{ selectedDevice.device_name }} </b> <br />
           </div>
@@ -414,6 +418,7 @@ import Vue from "vue";
 
 import Device from "@/types/device";
 import DeviceType from "@/types/device-type";
+import DevicePlatform from "@/types/device-platform";
 import Option from "@/types/option";
 import Interface from "@/types/interface";
 import InterfaceMode from "@/types/interface-mode";
@@ -421,9 +426,13 @@ import InterfaceMode from "@/types/interface-mode";
 interface DeviceTypeOption extends Option {
   type: DeviceType;
 }
+interface DevicePlatformOption extends Option {
+  type: DevicePlatform;
+}
+
 export default Vue.extend({
   metaInfo: {
-    title: "Device",
+    title: "Device management | NetCoCo",
   },
   data() {
     return {
@@ -439,10 +448,14 @@ export default Vue.extend({
       allDeviceType: [] as DeviceType[],
       options: [] as DeviceTypeOption[],
       selectedOption: 0 as number,
+      options2: [] as DevicePlatformOption[],
+      selectedOption2: 0 as number,
       selectedDevice: {} as Device,
       addDevice: {
+        device_ssh_port: 22,
         edges: {
           in_type: {} as DeviceType,
+          in_platform: {} as DevicePlatform,
         },
       } as Device,
       net_interface: {
@@ -453,6 +466,7 @@ export default Vue.extend({
         on_device: {} as Device,
       },
       allInterfaceMode: [] as InterfaceMode[],
+      allDevicePlatform: [] as DevicePlatform[],
       editModal: false,
       addModal: false,
       deleteModal: false,
@@ -461,7 +475,7 @@ export default Vue.extend({
     };
   },
   computed: {
-    getPageNumber() {
+    getPageNumber(): number {
       const pageNumber: number =
         this.table.showTable.length / this.table.perPage;
       return Math.ceil(pageNumber) == 0 ? 1 : Math.ceil(pageNumber);
@@ -516,6 +530,21 @@ export default Vue.extend({
           this.allInterfaceMode = response.data as InterfaceMode[];
         });
     },
+    getAllDevicePlatform() {
+      this.$api_connection
+        .secureAPI()
+        .get("/device-platform/get")
+        .then((response) => {
+          this.allDevicePlatform = response.data as DevicePlatform[];
+          this.allDevicePlatform.forEach((element: DevicePlatform, index) => {
+            this.options2.push({
+              text: element.device_platform_name,
+              value: index as number,
+              type: element,
+            });
+          });
+        });
+    },
     getAllDevice() {
       this.$api_connection
         .secureAPI()
@@ -523,8 +552,7 @@ export default Vue.extend({
         .then((response) => {
           this.allDevice = response.data as Device[];
           this.allDevice.forEach((element) => {
-            (element.device_password = ""),
-              (element.device_enable_password = "");
+            (element.device_password = ""), (element.device_secret = "");
           });
           if (this.allDevice.length > 0) this.haveDevice = true;
 
@@ -591,6 +619,10 @@ export default Vue.extend({
         (element) => element.type.id == this.selectedDevice.edges?.in_type?.id
       );
       this.selectedOption = deviceTypeIndex;
+      const platformIndex = this.options2.findIndex(
+        (element) => element.type.id == this.selectedDevice.edges?.in_platform?.id
+      );
+      this.selectedOption2 = platformIndex;
       this.editModal = true;
     },
     deleteDevice(i: number) {
@@ -603,7 +635,9 @@ export default Vue.extend({
     },
     add() {
       this.addDevice.edges!.in_type = this.options[this.selectedOption].type;
-
+      this.addDevice.edges!.in_platform = this.options2[
+        this.selectedOption2
+      ].type;
       this.loader = true;
 
       this.$api_connection
@@ -629,6 +663,9 @@ export default Vue.extend({
     update() {
       this.selectedDevice.edges!.in_type = this.options[
         this.selectedOption
+      ].type;
+      this.selectedDevice.edges!.in_platform = this.options2[
+        this.selectedOption2
       ].type;
 
       this.loader = true;
@@ -685,6 +722,7 @@ export default Vue.extend({
   },
   mounted() {
     this.getAllDevice();
+    this.getAllDevicePlatform();
     this.getAllInterfaceMode();
   },
 });

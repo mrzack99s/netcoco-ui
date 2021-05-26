@@ -72,13 +72,13 @@ img.logo {
 }
 .main {
   margin: 2.5em 0em 0em;
-  padding: 5em 0em;
+  padding: 2.5em 0em;
 }
 .wireframe {
   margin: 2em 0;
 }
 .footer {
-  margin: 5em 0em 0em;
-  padding: 5em 0em;
+  margin: 2.5em 0em 0em;
+  padding: 2.5em 0em;
 }
 </style>

@@ -16,9 +16,8 @@ Vue.use(Toasted,{
   type: "info"
 })
 Vue.use(apiFunction,{
-  baseURL: "http://localhost:8080/v1beta"
+  baseURL: `${process.env.VUE_APP_ROOT_API}/${process.env.VUE_APP_VERSION}`
 })
-
 new Vue({
   router,
   render: h => h(App)

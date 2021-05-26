@@ -75,16 +75,7 @@
       <sui-modal v-model="addModal" :closable="false">
         <sui-modal-header>Add topology</sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-
-          <sui-form @submit.prevent="add" v-else>
+          <sui-form @submit.prevent="add" :loading="loader">
             <sui-divider horizontal style="margin-bottom: 2em"
               ><sui-icon size="large" name="info circle" /> Topology
               Information</sui-divider
@@ -127,15 +118,7 @@
           >Edit devie type id {{ selectedTopology.id }}
         </sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-          <sui-form @submit.prevent="update" v-else>
+          <sui-form @submit.prevent="update" :loading="loader">
             <sui-divider horizontal style="margin-bottom: 2em"
               ><sui-icon size="large" name="info circle" /> topology
               Information</sui-divider
@@ -175,15 +158,7 @@
       <sui-modal v-model="deleteModal" size="mini" :closable="false">
         <sui-modal-header>Are you sure to delete?</sui-modal-header>
         <sui-modal-content text>
-          <sui-segment v-if="loader">
-            <sui-dimmer active inverted>
-              <sui-loader>Wait a few</sui-loader>
-            </sui-dimmer>
-            <br />
-            <br />
-            <br />
-          </sui-segment>
-          <div v-else>
+          <div :loading="loader">
             Name: <b>{{ selectedTopology.device_type_name }} </b> <br />
           </div>
         </sui-modal-content>
@@ -206,7 +181,7 @@ import TopologyType from "@/types/topology";
 
 export default Vue.extend({
   metaInfo: {
-    title: "Device",
+    title: "Create a topology | NetCoCo",
   },
   data() {
     return {
@@ -228,7 +203,7 @@ export default Vue.extend({
     };
   },
   computed: {
-    getPageNumber() {
+    getPageNumber(): number {
       const pageNumber: number =
         this.table.showTable.length / this.table.perPage;
       return Math.ceil(pageNumber) == 0 ? 1 : Math.ceil(pageNumber);

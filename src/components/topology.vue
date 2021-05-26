@@ -5,6 +5,12 @@
         <sui-grid-row :columns="2">
           <sui-grid-column>
             <h3 class="ui header">Topology name: {{ getTopologyName }}</h3>
+            <sui-button
+              icon="sync"
+              positive
+              size="mini"
+              @click="refreshTopology"
+            />
             <router-link
               to="/topology-fullscreen"
               v-if="$route.path != '/topology-fullscreen'"
@@ -17,6 +23,21 @@
                 <sui-icon name="home" />Back to dashboard</sui-button
               ></router-link
             >
+            <sui-button disabled :content="getNodeSize" size="mini" />
+            <sui-button-group icons size="mini">
+              <sui-button
+                icon="plus"
+                @click="topology.nodeSize = topology.nodeSize + 1"
+                basic
+                color="grey"
+              />
+              <sui-button
+                icon="minus"
+                @click="topology.nodeSize = topology.nodeSize - 1"
+                basic
+                color="grey"
+              />
+            </sui-button-group>
           </sui-grid-column>
           <sui-grid-column>
             <sui-form>
@@ -37,7 +58,27 @@
 
       <sui-card style="width: 100%">
         <sui-card-content>
-          <div id="topo" ref="topo" :style="{ height: $props.height }"></div>
+          <div
+            id="topo"
+            ref="topo"
+            :style="{ height: $props.height }"
+            v-if="havePlotTopology"
+          ></div>
+          <div style="width: 100%; height: 300px; padding-top: 2em" v-else>
+            <h2 class="center aligned ui header">Not have a plot of topology</h2>
+            <div class="center aligned description">
+              <p>Please plot your topology</p>
+              <router-link to="/topology">
+                <sui-button
+                  primary
+                  type="button"
+                  size="small"
+                  style="margin-top: 1em"
+                  >Create topology</sui-button
+                >
+              </router-link>
+            </div>
+          </div>
         </sui-card-content>
       </sui-card>
     </div>
@@ -73,10 +114,10 @@ import DeviceType from "@/types/device-type";
 import Topology from "@/types/topology";
 import "vis-network/styles/vis-network.css";
 import Device from "@/types/device";
+import PingResponse from "@/types/ping";
 
 export default Vue.extend({
-  components: {
-  },
+  components: {},
   props: {
     height: String,
   },
@@ -90,21 +131,36 @@ export default Vue.extend({
         modal: false,
         device_id: 0,
       },
+      havePlotTopology: false,
       topology: {
         name: null,
+        nodeSize: 20,
         selected: {} as Topology,
         nodeData: [] as NodeOptions[],
         edgesData: [] as EdgeOptions[],
+        nodeUnreachable: [] as number[],
+        rawEdges: [] as any,
+        state: {
+          edgeFetched: false,
+          alreadyState: false,
+        },
         groupNode: {},
         options: {},
         network: {} as Network,
       },
+      edge_prop: {
+        WIDTH_SCALE: 1,
+        GREEN: "green",
+        RED: "#C5000B",
+      },
     };
   },
   computed: {
-    getTopologyName() {
-      const selected = this.selectedTopoElement as Option;
-      return selected.text;
+    getTopologyName(): string {
+      return this.selectedTopoElement.text!;
+    },
+    getNodeSize(): string {
+      return `Node size: ${this.topology!.nodeSize}`;
     },
   },
   methods: {
@@ -152,7 +208,7 @@ export default Vue.extend({
       return false;
     },
     checkCanBeSetting(str: string) {
-      return (str == "l3switch" || str == "l2switch") ? true : false
+      return str == "l2switch" ? true : false;
     },
     getTopology() {
       this.$api_connection
@@ -165,101 +221,169 @@ export default Vue.extend({
             localData[element.device_type_name as any] = {
               shape: "image",
               image: require(`@/assets/images/${element.device_type_name}.png`),
-              size: 25,
+              size: this.topology.nodeSize,
             } as Node;
           });
           this.topology.groupNode = {};
           this.topology.groupNode = localData;
-        });
-
-      this.$api_connection
-        .secureAPI()
-        .get(`/topology/get/${this.selectedTopoElement.value}`)
-        .then((response) => {
-          const data = response.data as Topology;
-          if (data.edges?.topology?.length) {
-            this.topology.nodeData.length = 0;
-            this.allDevice.length = 0;
-            data.edges?.topology?.forEach((element, index) => {
-              var node = {
-                id: element.id,
-                label: element.edges!.device.device_name,
-                title: `DeviceName: ${element.edges!.device.device_name}
+        })
+        .finally(() => {
+          this.$api_connection
+            .secureAPI()
+            .get(`/topology/get/${this.selectedTopoElement.value}`)
+            .then((response) => {
+              const data = response.data as Topology;
+              if (data.edges?.topology != null) {
+                this.havePlotTopology = true;
+                this.topology.rawEdges = data.edges?.topology;
+                this.topology.nodeData.length = 0;
+                this.allDevice.length = 0;
+                data.edges?.topology?.forEach(async (element, index) => {
+                  var node = {
+                    id: element.id,
+                    label: element.edges!.device.device_name,
+                    title: `DeviceName: ${element.edges!.device.device_name}
                         Hostname: ${element.edges!.device.device_hostname}
-
-                        ${this.checkCanBeSetting(
-                          element.edges!.device.edges!.in_type!.device_type_name as string
-                        ) ? "Can be setting" : "Cannot be setting"}
+                        ${
+                          this.checkCanBeSetting(
+                            element.edges!.device.edges!.in_type!
+                              .device_type_name!
+                          )
+                            ? `Commit Status: ${
+                                element.edges?.device.device_commit_config
+                                  ? "commited"
+                                  : "uncommit"
+                              } `
+                            : "Cannot commit on this device"
+                        }         
+                        
+                        ${
+                          this.checkCanBeSetting(
+                            element.edges!.device.edges!.in_type!
+                              .device_type_name!
+                          )
+                            ? "Can setting on this device"
+                            : "Cannot setting on this device"
+                        }
                         `,
-                group: element.edges!.device.edges!.in_type!.device_type_name,
-                name: element.edges!.device.device_name,
-                value: element.edges!.device.id,
-                x: element.position_x == null ? 0 : element.position_x,
-                y: element.position_y == null ? 0 : element.position_y,
-                fixed: true,
-              };
-              this.topology.nodeData.push(node);
-              this.allDevice.push(element.edges?.device!);
-            });
+                    group: element.edges!.device.edges!.in_type!
+                      .device_type_name,
+                    name: element.edges!.device.device_name,
+                    value: element.edges!.device.id,
+                    x: element.position_x == null ? 0 : element.position_x,
+                    y: element.position_y == null ? 0 : element.position_y,
+                    fixed: true,
+                  };
+                  this.allDevice.push(element.edges?.device!);
 
-            this.topology.edgesData.length = 0;
-            data.edges.topology.forEach((element) => {
-              if (element != null) {
-                element.edges?.edge?.forEach((edge) => {
-                  if (element.id != edge.id) {
-                    if (!this.checkEdgeDuplicate(element.id, edge.id)) {
-                      var edgeOption = {
-                        from: element.id,
-                        to: edge.id,
-                      } as EdgeOptions;
-                      this.topology.edgesData.push(edgeOption);
-                    }
-                  }
+                  this.topology.nodeUnreachable.length = 0;
+                  await this.$api_connection
+                    .secureAPI()
+                    .get(
+                      `/net-automation/ping-device/${element.edges!.device.id}`
+                    )
+                    .then((response) => {
+                      const res = response.data as PingResponse;
+                      if (!res.is_alive) {
+                        this.topology.nodeUnreachable.push(element.id!);
+                        node.title.replace(
+                          "{alive}",
+                          "<span>Device is inactive</span>"
+                        );
+                      }
+                    });
+                  this.topology.nodeData.push(node);
+                  this.topology.state.edgeFetched = !this.topology.state
+                    .edgeFetched;
                 });
+              } else {
+                this.havePlotTopology = false;
               }
             });
-
-            this.topology.options = {
-              physics: true,
-              interaction: {
-                hover: true,
-                hideEdgesOnDrag: false,
-                hideEdgesOnZoom: false,
-                hideNodesOnDrag: false,
-                zoomView: true,
-              },
-              groups: this.topology.groupNode,
-            };
-
-            this.topology.network = new Network(
-              this.$refs.topo as HTMLElement,
-              {
-                nodes: this.topology.nodeData,
-                edges: this.topology.edgesData,
-              },
-              this.topology.options
-            );
-            this.topology.network.on("click", (params) => {
-              var node = this.topology.nodeData.find((element: any) => {
-                return element.id == params.nodes[0];
-              });
-              if (this.checkCanBeSetting(node?.group as string)) {
-                this.$router.push(`/device-setting/${node!.value}`)
-              }
-            });
-          }
         });
+    },
+    createEdge() {
+      this.topology.edgesData.length = 0;
+      this.topology.rawEdges.forEach((element: any) => {
+        if (element != null) {
+          element.edges?.edge?.forEach((edge: any) => {
+            if (element.id != edge.id) {
+              if (!this.checkEdgeDuplicate(element.id, edge.id)) {
+                if (
+                  !this.topology.nodeUnreachable.includes(element.id!) &&
+                  !this.topology.nodeUnreachable.includes(edge.id!)
+                ) {
+                  var edgeOption = {
+                    from: element.id,
+                    to: edge.id,
+                    color: this.edge_prop.GREEN,
+                    width: this.edge_prop.WIDTH_SCALE * 4,
+                  } as EdgeOptions;
+                } else {
+                  var edgeOption = {
+                    from: element.id,
+                    to: edge.id,
+                    color: this.edge_prop.RED,
+                    width: this.edge_prop.WIDTH_SCALE * 4,
+                  } as EdgeOptions;
+                }
+
+                this.topology.edgesData.push(edgeOption);
+              }
+            }
+          });
+        }
+      });
+      this.topology.state.alreadyState = !this.topology.state.alreadyState;
     },
     clearTopology() {
       this.topology.network.destroy();
+    },
+    refreshTopology() {
+      if (this.topology.nodeData.length != 0) this.clearTopology();
+      this.getTopology();
     },
   },
   mounted() {
     this.getAllTopology();
     setInterval(() => {
-      if (this.topology.nodeData.length != 0) this.clearTopology();
-      this.getTopology();
+      this.refreshTopology();
     }, 45000);
+  },
+  watch: {
+    "topology.state.edgeFetched"() {
+      this.createEdge();
+    },
+    "topology.state.alreadyState"() {
+      this.topology.options = {
+        physics: true,
+        interaction: {
+          hover: true,
+          hideEdgesOnDrag: false,
+          hideEdgesOnZoom: false,
+          hideNodesOnDrag: false,
+          zoomView: true,
+        },
+        groups: this.topology.groupNode,
+      };
+
+      this.topology.network = new Network(
+        this.$refs.topo as HTMLElement,
+        {
+          nodes: this.topology.nodeData,
+          edges: this.topology.edgesData,
+        },
+        this.topology.options
+      );
+      this.topology.network.on("click", (params) => {
+        var node = this.topology.nodeData.find((element: any) => {
+          return element.id == params.nodes[0];
+        });
+        if (this.checkCanBeSetting(node?.group as string)) {
+          this.$router.push(`/device-setting/${node!.value}`);
+        }
+      });
+    },
   },
 });
 </script>

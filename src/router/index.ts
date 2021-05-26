@@ -46,7 +46,7 @@ const routes: Array<RouteConfig> = [
 
 const router = new VueRouter({
   mode: 'history',
-  base: "/v1beta/ui",
+  base: `/${process.env.VUE_APP_VERSION}/ui`,
   routes
 })
 

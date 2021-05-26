@@ -55,7 +55,7 @@
       <sui-modal v-model="addModal" :closable="false">
         <sui-modal-header>Add node</sui-modal-header>
         <sui-modal-content text>
-          <sui-form @submit.prevent="addNodeAction">
+          <sui-form @submit.prevent="addNodeAction" :loading="loader">
             <sui-divider horizontal style="margin-bottom: 2em"
               ><sui-icon size="large" name="info circle" />
               Information</sui-divider
@@ -111,7 +111,7 @@
       <sui-modal v-model="addEdgeModal" size="mini" :closable="false">
         <sui-modal-header>Add edge</sui-modal-header>
         <sui-modal-content text style="font-size: 11pt">
-          <sui-form @submit.prevent="addEdgeAction">
+          <sui-form @submit.prevent="addEdgeAction" :loading="loader">
             <sui-form-field>
               <label>From node</label>
               <sui-dropdown
@@ -148,7 +148,7 @@
       <sui-modal v-model="deleteModal" size="mini" :closable="false">
         <sui-modal-header>Are you sure to delete?</sui-modal-header>
         <sui-modal-content text style="font-size: 11pt">
-          <sui-form @submit.prevent="deleteDeviceMapAction">
+          <sui-form @submit.prevent="deleteDeviceMapAction" :loading="loader">
             <sui-form-field>
               <label>Node device name</label>
               <sui-dropdown
@@ -175,6 +175,7 @@
 </template>
 
 <script lang="ts">
+/* eslint-disable */
 import Vue from "vue";
 
 import { Network, NodeOptions, EdgeOptions, Node } from "vis-network";
@@ -187,6 +188,9 @@ import Device from "@/types/device";
 import "vis-network/styles/vis-network.css";
 
 export default Vue.extend({
+  metaInfo: {
+    title: "Create a plot of topology | NetCoCo",
+  },
   props: {
     height: String,
   },
@@ -200,6 +204,7 @@ export default Vue.extend({
       haveTopology: false,
       haveGenerate: false,
       addModal: false,
+      loader: false,
       addEdgeModal: false,
       deleteModal: false,
       topology: {
@@ -217,9 +222,8 @@ export default Vue.extend({
     };
   },
   computed: {
-    getTopologyName() {
-      const selected = this.selectedTopoElement as Option;
-      return selected.text;
+    getTopologyName(): string {
+      return this.selectedTopoElement.text!;
     },
   },
   methods: {
@@ -284,7 +288,7 @@ export default Vue.extend({
             localData[element.device_type_name as any] = {
               shape: "image",
               image: require(`@/assets/images/${element.device_type_name}.png`),
-              size: 25,
+              size: 18,
             } as Node;
           });
           this.topology.groupNode = {};
@@ -417,6 +421,7 @@ export default Vue.extend({
     },
     addNodeAction() {
       this.deviceMap.topology_id = this.selectedTopoElement.value;
+      this.loader = true;
       this.$api_connection
         .secureAPI()
         .post("/topology-device-map/create", this.deviceMap)
@@ -427,12 +432,15 @@ export default Vue.extend({
           this.getTopology();
           this.deviceMap = {} as DeviceMap;
           this.addModal = false;
+          this.loader = false;
         })
         .catch(() => {
           this.$toasted.error("Add device map failed!");
+          this.loader = false;
         });
     },
     addEdgeAction() {
+      this.loader = true;
       this.$api_connection
         .secureAPI()
         .post("/topology-device-map/create-edge", this.edge)
@@ -443,12 +451,16 @@ export default Vue.extend({
           this.getTopology();
           this.edge = {} as EdgeMap;
           this.addEdgeModal = false;
+          this.loader = false;
         })
         .catch(() => {
           this.$toasted.error("Add edge failed!");
+          this.loader = false;
         });
+      
     },
     deleteDeviceMapAction() {
+      this.loader = true;
       this.$api_connection
         .secureAPI()
         .delete(`/topology-device-map/delete/${this.deleteMapID}`)
@@ -459,10 +471,13 @@ export default Vue.extend({
           this.getTopology();
           this.deleteMapID = 0;
           this.deleteModal = false;
+          this.loader = false;
         })
         .catch(() => {
           this.$toasted.error("Delete device map failed!");
+          this.loader = false;
         });
+      
     },
     clearTopology() {
       this.topology.network.destroy();
