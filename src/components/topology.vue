@@ -334,6 +334,7 @@ export default Vue.extend({
           });
         }
       });
+
       this.topology.state.alreadyState = !this.topology.state.alreadyState;
     },
     clearTopology() {
