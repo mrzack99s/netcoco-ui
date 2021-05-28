@@ -308,7 +308,9 @@ export default Vue.extend({
                 _d_id: element.edges!.device.id,
                 label: element.edges!.device.device_name,
                 title: `DeviceName: ${element.edges!.device.device_name}
-                            Hostname: ${element.edges!.device.device_hostname}
+                        Hostname: ${element.edges!.device.device_hostname}
+                        X-Axis:  ${element.position_x == null ? 0 : element.position_x}
+                        Y-Axis: ${element.position_y == null ? 0 : element.position_y}
                             `,
                 group: element.edges!.device.edges!.in_type!.device_type_name,
                 name: element.edges!.device.device_name,
