@@ -134,7 +134,7 @@ export default Vue.extend({
       havePlotTopology: false,
       topology: {
         name: null,
-        nodeSize: 20,
+        nodeSize: 25,
         selected: {} as Topology,
         nodeData: [] as NodeOptions[],
         edgesData: [] as EdgeOptions[],

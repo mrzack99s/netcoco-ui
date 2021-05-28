@@ -288,7 +288,7 @@ export default Vue.extend({
             localData[element.device_type_name as any] = {
               shape: "image",
               image: require(`@/assets/images/${element.device_type_name}.png`),
-              size: 18,
+              size: 20,
             } as Node;
           });
           this.topology.groupNode = {};
