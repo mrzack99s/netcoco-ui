@@ -16,7 +16,7 @@ Vue.use(Toasted,{
   type: "info"
 })
 Vue.use(apiFunction,{
-  baseURL: `${process.env.VUE_APP_ROOT_API}/${process.env.VUE_APP_VERSION}`
+  baseURL: `${process.env.VUE_APP_ROOT_API}`
 })
 new Vue({
   router,
