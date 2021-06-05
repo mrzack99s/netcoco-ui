@@ -580,8 +580,6 @@ export default Vue.extend({
         var prefix = this.net_interface.prefix;
         var interFace = {
           interface_name: prefix.replaceAll("x", `${i}`),
-          interface_vlan: "",
-          interface_native_vlan: "",
           edges: {
             mode: this.allInterfaceMode.find((element) => {
               return element.interface_mode == "None";

@@ -362,8 +362,6 @@ export default Vue.extend({
             );
           }
         });
-
-      console.log(this.topology.nodeData);
     },
     deleteClick() {
       this.allDeleteEdge.length = 0;
