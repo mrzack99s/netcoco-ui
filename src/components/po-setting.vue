@@ -3,7 +3,7 @@
     <sui-table celled>
       <sui-table-header full-width>
         <sui-table-row>
-          <sui-table-header-cell colspan="6">
+          <sui-table-header-cell colspan="7">
             <sui-input
               size="small"
               placeholder="Search"
@@ -26,8 +26,9 @@
         <sui-table-row>
           <sui-table-header-cell>PoID</sui-table-header-cell>
           <sui-table-header-cell>Mode</sui-table-header-cell>
-          <sui-table-header-cell>VLANs</sui-table-header-cell>
-          <sui-table-header-cell>NVLAN</sui-table-header-cell>
+          <sui-table-header-cell>VLANs / IP Addr</sui-table-header-cell>
+          <sui-table-header-cell>NVLAN / Netmask</sui-table-header-cell>
+          <sui-table-header-cell>Layer</sui-table-header-cell>
           <sui-table-header-cell>Status</sui-table-header-cell>
           <sui-table-header-cell />
         </sui-table-row>
@@ -36,12 +37,31 @@
         <sui-table-row v-for="(obj, index) in tableFilter" :key="obj.id">
           <sui-table-cell>{{ obj.po_interface_id }}</sui-table-cell>
           <sui-table-cell>{{ obj.edges.mode.interface_mode }}</sui-table-cell>
-          <sui-table-cell>{{
-            getIntVlans(obj.edges.have_vlans)
-          }}</sui-table-cell>
-          <sui-table-cell>{{
-            obj.edges.native_on_vlan.vlan_id
-          }}</sui-table-cell>
+          <sui-table-cell>
+            <span v-if="obj.edges.on_layer.interface_layer == 2">
+              <span v-if="obj.edges.have_vlans">
+                {{ getIntVlans(obj.edges.have_vlans) }}
+              </span>
+              <span v-else> - </span>
+            </span>
+            <span v-else-if="obj.edges.on_layer.interface_layer == 3">
+              {{ obj.edges.on_ip_address.ip_address }}
+            </span>
+          </sui-table-cell>
+          <sui-table-cell>
+            <span v-if="obj.edges.on_layer.interface_layer == 2">
+              <span v-if="obj.edges.native_on_vlan">
+                {{ obj.edges.native_on_vlan.vlan_id }}
+              </span>
+              <span v-else> - </span>
+            </span>
+            <span v-else-if="obj.edges.on_layer.interface_layer == 3">
+              {{ obj.edges.on_ip_address.subnet_mask }}
+            </span>
+          </sui-table-cell>
+          <sui-table-cell
+            >layer {{ obj.edges.on_layer.interface_layer }}</sui-table-cell
+          >
           <sui-table-cell>{{
             obj.interface_shutdown ? "shutdown" : "no shutdown"
           }}</sui-table-cell>
@@ -65,7 +85,7 @@
       </sui-table-body>
       <sui-table-footer v-if="haveInterface">
         <sui-table-row>
-          <sui-table-header-cell colspan="6">
+          <sui-table-header-cell colspan="7">
             <sui-menu pagination style="font-size: 10pt">
               <span v-for="p in getPageNumber" :key="p">
                 <a
@@ -88,90 +108,202 @@
         <sui-modal-content text>
           <sui-form @submit.prevent="add" :loading="loader">
             <sui-divider horizontal style="margin-bottom: 2em"
+              ><sui-icon size="large" name="info circle" /> Interface layer
+            </sui-divider>
+            <sui-form-fields inline>
+              <label>Select interface layer</label>
+              <sui-form-field v-for="obj in allLayers" :key="obj.id">
+                <sui-checkbox
+                  :label="`Layer ${obj.interface_layer}`"
+                  radio
+                  :value="obj"
+                  v-model="selectLayer"
+                />
+              </sui-form-field>
+            </sui-form-fields>
+
+            <sui-divider horizontal style="margin-bottom: 2em"
               ><sui-icon size="large" name="info circle" /> Port-channel
               Interface Information</sui-divider
             >
-            <sui-form-field>
-              <sui-form-fields fields="three">
-                <sui-form-field width="seven">
-                  <label>Port-channel ID</label>
-                  <input
-                    type="text"
-                    placeholder="Po ID"
-                    required
-                    disabled
-                    v-model="addInterface.po_interface_id"
-                  />
-                </sui-form-field>
-                <sui-form-field width="seven">
-                  <label>Interface Mode</label>
-                  <sui-dropdown
-                    placeholder="Interface Mode"
-                    required
-                    selection
-                    :options="options"
-                    v-model="selectedOption"
-                  />
-                </sui-form-field>
-                <sui-form-field>
-                  <label>Interface Status</label>
-                  <div>
-                    <sui-checkbox
-                      :label="getInterfaceStatus"
-                      toggle
-                      v-model="interface_shutdown"
-                      style="margin: 5px 0 0 5px"
+
+            <span v-if="selectLayer.interface_layer == 2">
+              <sui-form-field>
+                <sui-form-fields fields="three">
+                  <sui-form-field width="seven">
+                    <label>Port-channel ID</label>
+                    <input
+                      type="text"
+                      placeholder="Po ID"
+                      required
+                      disabled
+                      v-model="addInterface.po_interface_id"
                     />
-                  </div>
-                </sui-form-field>
-              </sui-form-fields>
-              <sui-form-fields
-                fields="two"
-                v-if="
-                  getInterfaceMode == 'Access' || getInterfaceMode == 'Trunking'
-                "
-              >
-                <sui-form-field v-if="getInterfaceMode == 'Access'">
-                  <label>VLANs</label>
-                  <sui-dropdown
-                    fluid
-                    :options="vlans"
-                    placeholder="Vlans"
-                    search
-                    selection
-                    required
-                    v-model="selectedAccessVlan"
-                  />
-                </sui-form-field>
-                <sui-form-field v-else>
-                  <label>VLANs</label>
-                  <sui-dropdown
-                    multiple
-                    fluid
-                    :options="vlans"
-                    placeholder="Vlans"
-                    search
-                    selection
-                    required
-                    v-model="selectedHaveVlans"
-                  />
-                </sui-form-field>
-                <sui-form-field v-if="getInterfaceMode == 'Trunking'">
-                  <label>Native VLAN</label>
-                  <sui-dropdown
-                    placeholder="Native Vlans"
-                    required
-                    search
-                    selection
-                    :options="vlans"
-                    v-model="selectedOption2"
-                  />
-                </sui-form-field>
-              </sui-form-fields>
-            </sui-form-field>
+                  </sui-form-field>
+                  <sui-form-field width="seven">
+                    <label>Interface Mode</label>
+                    <sui-dropdown
+                      placeholder="Interface Mode"
+                      required
+                      selection
+                      :options="options"
+                      v-model="selectedOption"
+                    />
+                  </sui-form-field>
+                  <sui-form-field>
+                    <label>Interface Status</label>
+                    <div>
+                      <sui-checkbox
+                        :label="getInterfaceStatus"
+                        toggle
+                        v-model="interface_shutdown"
+                        style="margin: 5px 0 0 5px"
+                      />
+                    </div>
+                  </sui-form-field>
+                </sui-form-fields>
+                <sui-form-fields
+                  fields="two"
+                  v-if="
+                    getInterfaceMode == 'Access' ||
+                    getInterfaceMode == 'Trunking'
+                  "
+                >
+
+                  <sui-form-field v-if="getInterfaceMode == 'Access'">
+                    <label>VLANs</label>
+                    <sui-dropdown
+                      fluid
+                      :options="vlans"
+                      placeholder="Vlans"
+                      search
+                      selection
+                      required
+                      v-model="selectedAccessVlan"
+                    />
+                  </sui-form-field>
+                  <sui-form-field v-else>
+                    <label>VLANs</label>
+                    <sui-dropdown
+                      multiple
+                      fluid
+                      :options="vlans"
+                      placeholder="Vlans"
+                      search
+                      selection
+                      required
+                      v-model="selectedHaveVlans"
+                    />
+                  </sui-form-field>
+                  <sui-form-field v-if="getInterfaceMode == 'Trunking'">
+                    <label>Native VLAN</label>
+                    <sui-dropdown
+                      placeholder="Native Vlans"
+                      required
+                      search
+                      selection
+                      :options="vlans"
+                      v-model="selectedOption2"
+                    />
+                  </sui-form-field>
+                </sui-form-fields>
+                
+              </sui-form-field>
+            </span>
+            <span v-if="selectLayer.interface_layer == 3">
+              <sui-form-field>
+                <sui-form-fields fields="two">
+                  <sui-form-field width="seven">
+                    <label>Port-channel ID</label>
+                    <input
+                      type="text"
+                      placeholder="Po ID"
+                      required
+                      disabled
+                      v-model="addInterface.po_interface_id"
+                    />
+                  </sui-form-field>
+                  <sui-form-field>
+                    <label>Interface Status</label>
+                    <div>
+                      <sui-checkbox
+                        :label="getInterfaceStatus"
+                        toggle
+                        v-model="interface_shutdown"
+                        style="margin: 5px 0 0 5px"
+                      />
+                    </div>
+                  </sui-form-field>
+                </sui-form-fields>
+
+                <sui-form-fields fields="two">
+                  <sui-form-field>
+                    <label>IP Address</label>
+                    <sui-input
+                      type="text"
+                      :error="ipHasError"
+                      placeholder="IP Address"
+                      required
+                      v-model="ipAddress.ip_address"
+                      style="width: 50%"
+                    />
+                    <sui-label
+                      pointing="left"
+                      v-if="ipAddress.ip_address == ''"
+                      >Ex. 172.31.255.254
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="red"
+                      pointing="left"
+                      v-else-if="ipHasError"
+                      >Worng!, Ex. 172.31.255.254
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="green"
+                      pointing="left"
+                      v-else-if="!ipHasError"
+                      >IP Address is correct.
+                    </sui-label>
+                  </sui-form-field>
+
+                  <sui-form-field>
+                    <label>Subnet Mask</label>
+                    <sui-input
+                      type="text"
+                      placeholder="Subnet Mask"
+                      required
+                      style="width: 50%"
+                      :error="subnetHasError"
+                      v-model="ipAddress.subnet_mask"
+                    />
+                    <sui-label
+                      pointing="left"
+                      v-if="ipAddress.subnet_mask == ''"
+                      >Ex. 255.255.255.0
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="red"
+                      pointing="left"
+                      v-else-if="subnetHasError"
+                      >Worng!, Ex. 255.255.255.0
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="green"
+                      pointing="left"
+                      v-else-if="!subnetHasError"
+                      >Subnet mask is correct.
+                    </sui-label>
+                  </sui-form-field>
+                </sui-form-fields>
+              </sui-form-field>
+            </span>
 
             <sui-form-field style="margin: 2em 0">
-              <sui-button positive type="submit"> Add interface </sui-button>
+              <sui-button positive type="submit"> Add port-channel </sui-button>
               <sui-button @click="addModal = false" type="button">
                 close
               </sui-button>
@@ -190,83 +322,197 @@
         <sui-modal-content text>
           <sui-form @submit.prevent="update" :loading="loader">
             <sui-divider horizontal style="margin-bottom: 2em"
-              ><sui-icon size="large" name="info circle" /> Port-channel Information</sui-divider
+              ><sui-icon size="large" name="info circle" /> Interface layer
+            </sui-divider>
+            <sui-form-fields inline>
+              <label>Select interface layer</label>
+              <sui-form-field v-for="obj in allLayers" :key="obj.id">
+                <sui-checkbox
+                  :label="`Layer ${obj.interface_layer}`"
+                  radio
+                  :value="obj"
+                  v-model="selectLayer"
+                />
+              </sui-form-field>
+            </sui-form-fields>
+
+            <sui-divider horizontal style="margin-bottom: 2em"
+              ><sui-icon size="large" name="info circle" /> Port-channel
+              Information</sui-divider
             >
-            <sui-form-field>
-              <sui-form-fields fields="three">
-                <sui-form-field width="seven">
-                  <label>Port-channel ID</label>
-                  <input
-                    type="text"
-                    placeholder="Po ID"
-                    disabled
-                    v-model="selectedInterface.po_interface_id"
-                  />
-                </sui-form-field>
-                <sui-form-field width="seven">
-                  <label>Interface Mode</label>
-                  <sui-dropdown
-                    placeholder="Interface Mode"
-                    required
-                    selection
-                    :options="options"
-                    v-model="selectedOption"
-                  />
-                </sui-form-field>
-                <sui-form-field>
-                  <label>Interface Status</label>
-                  <sui-checkbox
-                    :label="getInterfaceStatus"
-                    toggle
-                    v-model="interface_shutdown"
-                    style="margin: 5px 0 0 5px"
-                  />
-                </sui-form-field>
-              </sui-form-fields>
-              <sui-form-fields
-                fields="two"
-                v-if="
-                  getInterfaceMode == 'Access' || getInterfaceMode == 'Trunking'
-                "
-              >
-                <sui-form-field v-if="getInterfaceMode == 'Access'">
-                  <label>VLANs</label>
-                  <sui-dropdown
-                    fluid
-                    :options="vlans"
-                    placeholder="Vlans"
-                    search
-                    selection
-                    required
-                    v-model="selectedAccessVlan"
-                  />
-                </sui-form-field>
-                <sui-form-field v-else>
-                  <label>VLANs</label>
-                  <sui-dropdown
-                    multiple
-                    fluid
-                    :options="vlans"
-                    placeholder="Vlans"
-                    search
-                    selection
-                    required
-                    v-model="selectedHaveVlans"
-                  />
-                </sui-form-field>
-                <sui-form-field v-if="getInterfaceMode == 'Trunking'">
-                  <label>Native VLAN</label>
-                  <sui-dropdown
-                    placeholder="Native Vlans"
-                    required
-                    search
-                    selection
-                    :options="vlans"
-                    v-model="selectedOption2"
-                  />
-                </sui-form-field>
-              </sui-form-fields>
-            </sui-form-field>
+            <span v-if="selectLayer.interface_layer == 2">
+              <sui-form-field>
+                <sui-form-fields fields="three">
+                  <sui-form-field width="seven">
+                    <label>Port-channel ID</label>
+                    <input
+                      type="text"
+                      placeholder="Po ID"
+                      disabled
+                      v-model="selectedInterface.po_interface_id"
+                    />
+                  </sui-form-field>
+                  <sui-form-field width="seven">
+                    <label>Interface Mode</label>
+                    <sui-dropdown
+                      placeholder="Interface Mode"
+                      required
+                      selection
+                      :options="options"
+                      v-model="selectedOption"
+                    />
+                  </sui-form-field>
+                  <sui-form-field>
+                    <label>Interface Status</label>
+                    <sui-checkbox
+                      :label="getInterfaceStatus"
+                      toggle
+                      v-model="interface_shutdown"
+                      style="margin: 5px 0 0 5px"
+                    />
+                  </sui-form-field>
+                </sui-form-fields>
+                <sui-form-fields
+                  fields="two"
+                  v-if="
+                    getInterfaceMode == 'Access' ||
+                    getInterfaceMode == 'Trunking'
+                  "
+                >
+                  <sui-form-field v-if="getInterfaceMode == 'Access'">
+                    <label>VLANs</label>
+                    <sui-dropdown
+                      fluid
+                      :options="vlans"
+                      placeholder="Vlans"
+                      search
+                      selection
+                      required
+                      v-model="selectedAccessVlan"
+                    />
+                  </sui-form-field>
+                  <span v-if="getInterfaceMode == 'Trunking'">
+                  <sui-form-field>
+                    <label>VLANs</label>
+                    <sui-dropdown
+                      multiple
+                      fluid
+                      :options="vlans"
+                      placeholder="Vlans"
+                      search
+                      selection
+                      required
+                      v-model="selectedHaveVlans"
+                    />
+                  </sui-form-field>
+                  <sui-form-field>
+                    <label>Native VLAN</label>
+                    <sui-dropdown
+                      placeholder="Native Vlans"
+                      required
+                      search
+                      selection
+                      :options="vlans"
+                      v-model="selectedOption2"
+                    />
+                  </sui-form-field>
+                  </span>
+                </sui-form-fields>
+              </sui-form-field>
+            </span>
+
+            <span v-if="selectLayer.interface_layer == 3">
+              <sui-form-field>
+                <sui-form-fields fields="two">
+                  <sui-form-field width="seven">
+                    <label>Port-channel ID</label>
+                    <input
+                      type="text"
+                      placeholder="Po ID"
+                      required
+                      disabled
+                      v-model="selectedInterface.po_interface_id"
+                    />
+                  </sui-form-field>
+                  <sui-form-field>
+                    <label>Interface Status</label>
+                    <div>
+                      <sui-checkbox
+                        :label="getInterfaceStatus"
+                        toggle
+                        v-model="interface_shutdown"
+                        style="margin: 5px 0 0 5px"
+                      />
+                    </div>
+                  </sui-form-field>
+                </sui-form-fields>
+
+               <sui-form-fields fields="two">
+                  <sui-form-field>
+                    <label>IP Address</label>
+                    <sui-input
+                      type="text"
+                      :error="ipHasError"
+                      placeholder="IP Address"
+                      required
+                      v-model="ipAddress.ip_address"
+                      style="width: 50%"
+                    />
+                    <sui-label
+                      pointing="left"
+                      v-if="ipAddress.ip_address == ''"
+                      >Ex. 172.31.255.254
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="red"
+                      pointing="left"
+                      v-else-if="ipHasError"
+                      >Worng!, Ex. 172.31.255.254
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="green"
+                      pointing="left"
+                      v-else-if="!ipHasError"
+                      >IP Address is correct.
+                    </sui-label>
+                  </sui-form-field>
+
+                  <sui-form-field>
+                    <label>Subnet Mask</label>
+                    <sui-input
+                      type="text"
+                      placeholder="Subnet Mask"
+                      required
+                      style="width: 50%"
+                      :error="subnetHasError"
+                      v-model="ipAddress.subnet_mask"
+                    />
+                    <sui-label
+                      pointing="left"
+                      v-if="ipAddress.subnet_mask == ''"
+                      >Ex. 255.255.255.0
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="red"
+                      pointing="left"
+                      v-else-if="subnetHasError"
+                      >Worng!, Ex. 255.255.255.0
+                    </sui-label>
+                    <sui-label
+                      basic
+                      color="green"
+                      pointing="left"
+                      v-else-if="!subnetHasError"
+                      >Subnet mask is correct.
+                    </sui-label>
+                  </sui-form-field>
+                </sui-form-fields>
+              </sui-form-field>
+            </span>
+
             <sui-form-field style="margin: 2em 0">
               <sui-button positive type="submit"> Update interface </sui-button>
               <sui-button @click="editModal = false" type="button">
@@ -292,13 +538,32 @@
             <br />
           </sui-segment>
           <div v-else>
-            Interface mode:
-            <b>{{ selectedInterface.edges.mode.interface_mode }} </b> <br />
-            Interface VLANs:
-            <b> {{ getIntVlans(selectedInterface.edges.have_vlans) }} </b>
-            <br />
-            Interface Native VLAN:
-            <b>{{ selectedInterface.edges.native_on_vlan.vlan_id }} </b> <br />
+            <span v-if="selectedInterface.edges.on_layer.interface_layer == 2">
+              Interface mode:
+              <b>{{ selectedInterface.edges.mode.interface_mode }} </b> <br />
+              Interface VLANs:
+              <b> {{ getIntVlans(selectedInterface.edges.have_vlans) }} </b>
+              <br />
+              Interface Native VLAN:
+              <b>{{ selectedInterface.edges.native_on_vlan.vlan_id }} </b>
+              <br />
+            </span>
+            <span v-else-if="selectedInterface.edges.on_layer.interface_layer == 3">
+              Interface name:
+              <b>Port-channel {{ selectedInterface.po_interface_id }} </b> <br />
+              IP Address:
+              <b> {{ selectedInterface.edges.on_ip_address.ip_address  }} </b>
+              <br />
+              Subnet Mask:
+              <b>{{ selectedInterface.edges.on_ip_address.subnet_mask }} </b>
+              <br />
+            </span>
+            <span v-else>
+              
+              <b>None</b> <br />
+  
+              <br />
+            </span>
           </div>
         </sui-modal-content>
         <sui-modal-actions v-if="!loader">
@@ -321,6 +586,8 @@ import PoInterface from "@/types/po-interface";
 import InterfaceMode from "@/types/interface-mode";
 import Option from "@/types/option";
 import Vlan from "@/types/vlan";
+import InterfaceLayer from "@/types/interface-layer";
+import IPAddress from "@/types/ip-address";
 
 interface InterfaceTypeOption extends Option {
   type: InterfaceMode;
@@ -339,6 +606,16 @@ export default Vue.extend({
   },
   data() {
     return {
+            ipAddrRegx:
+        /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+      subnetRegx:
+        /^(((255.){3}(255|254|252|248|240|224|192|128|0+))|((255.){2}(255|254|252|248|240|224|192|128|0+).0)|((255.)(255|254|252|248|240|224|192|128|0+)(.0+){2})|((255|254|252|248|240|224|192|128|0+)(.0+){3}))$/,
+      ipHasError: false,
+      subnetHasError: false,
+            ipAddress: {
+        ip_address: "",
+        subnet_mask: "",
+      } as IPAddress,
       table: {
         perPage: 25,
         currentPagination: 1,
@@ -362,6 +639,8 @@ export default Vue.extend({
           have_vlans: [] as Vlan[],
           native_on_vlan: {} as Vlan,
           mode: {} as InterfaceMode,
+          on_layer: {} as InterfaceLayer,
+          on_ip_address: {} as IPAddress,
         },
       } as PoInterface,
       addInterface: {
@@ -369,12 +648,17 @@ export default Vue.extend({
           have_vlans: [] as Vlan[],
           native_on_vlan: {} as Vlan,
           mode: {} as InterfaceMode,
+          on_layer: {} as InterfaceLayer,
+          on_ip_address: {} as IPAddress,
         },
       } as PoInterface,
       interface_shutdown: true,
       editModal: false,
       addModal: false,
       deleteModal: false,
+      allLayers: [] as InterfaceLayer[],
+      selectLayer: {} as InterfaceLayer,
+      notSupportL3: ["sg300"],
     };
   },
   computed: {
@@ -437,7 +721,13 @@ export default Vue.extend({
       return str;
     },
     addClick() {
-      this.addInterface.po_interface_id = this.allInterface.length + 1;
+      if (this.allInterface)
+        this.addInterface.po_interface_id = this.allInterface.length + 1;
+      else this.addInterface.po_interface_id = 1;
+
+      this.selectLayer = this.allLayers.find((element) => {
+        return element.interface_layer == 2;
+      }) as InterfaceLayer;
       this.interface_shutdown = true;
       this.addModal = true;
     },
@@ -452,11 +742,11 @@ export default Vue.extend({
           this.allInterfaceMode = response.data as InterfaceMode[];
 
           this.allInterfaceMode.forEach(
-            (element: InterfaceMode, index: number) => {
+            (element: InterfaceMode) => {
               if (element.interface_mode != "EtherChannel")
                 this.options.push({
                   text: element.interface_mode as string,
-                  value: index as number,
+                  value: this.options.length as number,
                   type: element,
                 });
             }
@@ -470,7 +760,7 @@ export default Vue.extend({
         .get(`/device/get/${this.device_id}`)
         .then((response) => {
           this.deviceObj = response.data as Device;
-          
+
           this.allInterface = this.deviceObj.edges!
             .po_interfaces as PoInterface[];
           this.allVlans = this.deviceObj.edges?.store_vlans as Vlan[];
@@ -482,12 +772,49 @@ export default Vue.extend({
               type: element,
             });
           });
+
+          this.$api_connection
+            .secureAPI()
+            .get("/net-interface-layer/get")
+            .then((response) => {
+              this.allLayers = [];
+              var data = response.data as InterfaceLayer[];
+              data.forEach((element) => {
+                if (
+                  !(
+                    this.notSupportL3.includes(
+                      this.deviceObj.edges!.in_platform!.device_platform_name
+                    ) && element.interface_layer == 3
+                  )
+                )
+                  this.allLayers.push(element);
+              });
+            });
+
           if (this.allInterface) this.haveInterface = true;
         });
-
     },
     edit(i: number) {
+      if (!this.table.showTable[i].edges!.have_vlans)
+        this.table.showTable[i].edges!.have_vlans = [] as Vlan[];
+      if (!this.table.showTable[i].edges!.native_on_vlan)
+        this.table.showTable[i].edges!.native_on_vlan = this.vlans.find(
+          (element) => {
+            return element.type.vlan_id == 1;
+          }
+        )?.type;
+
       this.selectedInterface = this.table.showTable[i];
+      this.selectLayer = this.allLayers.find((element) => {
+        return (
+          element.interface_layer ==
+          this.selectedInterface.edges!.on_layer!.interface_layer
+        );
+      }) as InterfaceLayer;
+
+      if (!this.selectedInterface.edges?.on_ip_address)
+        this.selectedInterface.edges!.on_ip_address = {} as IPAddress;
+
       this.interface_shutdown = this.selectedInterface.po_interface_shutdown!;
       const interfaceModeIndex = this.options.findIndex(
         (element) => element.type.id == this.selectedInterface.edges?.mode?.id
@@ -519,6 +846,8 @@ export default Vue.extend({
         return p.type.id == this.selectedInterface.edges?.native_on_vlan?.id;
       });
 
+      this.ipAddress = this.selectedInterface.edges!.on_ip_address!
+
       this.editModal = true;
     },
     deleteInterface(i: number) {
@@ -548,8 +877,12 @@ export default Vue.extend({
 
       this.selectedHaveVlans = [];
       this.selectedAccessVlan = 0;
-
-      this.loader = true;
+      this.addInterface.edges!.on_layer! = this.selectLayer;
+      this.addInterface.edges!.on_ip_address! = this.ipAddress;
+      if (this.selectLayer.interface_layer == 3 && (this.ipHasError || this.subnetHasError)) {
+        this.$toasted.info("Please correct ip address or subnet mask")
+      } else {
+        this.loader = true;
       this.$api_connection
         .secureAPI()
         .post("/po-interface/create", this.addInterface)
@@ -560,16 +893,23 @@ export default Vue.extend({
           this.addModal = false;
           this.addInterface = {
             edges: {
+              have_vlans: [] as Vlan[],
+              native_on_vlan: {} as Vlan,
               mode: {} as InterfaceMode,
-              on_device: {} as Device,
+              on_layer: {} as InterfaceLayer,
+              on_ip_address: {} as IPAddress,
             },
           } as PoInterface;
           this.loader = false;
         })
-        .catch(() => {
+        .catch((err) => {
+          if(err.response.data.error)
+            this.$toasted.error(this.$capitalize(err.response.data.error));
+          else
+            this.$toasted.error("Error!!");
           this.loader = false;
-          this.$toasted.error("Add port-channel interface failed!");
         });
+      }
     },
     update() {
       this.selectedInterface.edges!.mode =
@@ -578,7 +918,6 @@ export default Vue.extend({
       temp.edges = {};
       this.selectedInterface.po_interface_shutdown = this.interface_shutdown;
       this.selectedInterface.edges!.on_device! = temp;
-      this.loader = true;
 
       this.selectedInterface.edges!.native_on_vlan! =
         this.vlans[this.selectedOption2].type;
@@ -598,7 +937,14 @@ export default Vue.extend({
       }
 
       this.selectedHaveVlans = [];
+      this.selectedInterface.edges!.on_layer! = this.selectLayer;
+      this.selectedInterface.edges!.on_ip_address! = this.ipAddress;
 
+      if (this.selectLayer.interface_layer == 3 && (this.ipHasError || this.subnetHasError)) {
+        this.$toasted.info("Please correct ip address or subnet mask")
+      } else {
+
+        this.loader = true;
       this.$api_connection
         .secureAPI()
         .post("/po-interface/edit", this.selectedInterface)
@@ -611,10 +957,14 @@ export default Vue.extend({
           this.editModal = false;
           this.loader = false;
         })
-        .catch(() => {
-          this.$toasted.error("Update port-channel interface failed!");
+        .catch((err) => {
+          if(err.response.data.error)
+            this.$toasted.error(this.$capitalize(err.response.data.error));
+          else
+            this.$toasted.error("Error!!");
           this.loader = false;
         });
+      }
     },
     deleteInterfaceAction() {
       this.loader = true;
@@ -633,10 +983,25 @@ export default Vue.extend({
           this.loader = false;
         });
     },
+  
+    ipAddrValidation() {
+      this.ipHasError = !this.ipAddrRegx.test(this.ipAddress.ip_address);
+    },
+    subnetValidation() {
+      this.subnetHasError = !this.subnetRegx.test(this.ipAddress.subnet_mask);
+    },
   },
   mounted() {
     this.getallInterface();
     this.getAllInterfaceMode();
+  },
+  watch: {
+    "ipAddress.ip_address"() {
+      this.ipAddrValidation();
+    },
+    "ipAddress.subnet_mask"() {
+      this.subnetValidation();
+    },
   },
 });
 </script>
