@@ -1,11 +1,14 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <sui-segment clearing basic>
       <h4 is="sui-header" floated="right">
         <sui-icon name="microchip" />
-        <sui-header-content>{{
-          header_type_name
-        }}</sui-header-content>
+        <sui-header-content>{{ header_type_name }}</sui-header-content>
       </h4>
       <h2 is="sui-header" floated="left">
         <sui-icon name="settings" />
@@ -23,7 +26,12 @@
       <sui-tab-pane title="Interface Setting">
         <InterfaceSetting :device_id="$route.params.id" />
       </sui-tab-pane>
-      <sui-tab-pane title="Port-channel Interface Setting">
+      <sui-tab-pane
+        title="Port-channel Interface Setting"
+        v-if="
+          $ablePortChannelConfig.includes(device.edges.in_type.device_type_name)
+        "
+      >
         <PoInterfaceSetting :device_id="$route.params.id" />
       </sui-tab-pane>
       <sui-tab-pane title="Commit Setting">
@@ -45,12 +53,13 @@ export default Vue.extend({
     InterfaceSetting,
     CommitSetting,
     VlanSetting,
-    PoInterfaceSetting
+    PoInterfaceSetting,
   },
   data() {
     return {
       device: {} as Device,
       header_type_name: "",
+      already: false,
     };
   },
   methods: {
@@ -60,7 +69,9 @@ export default Vue.extend({
         .get(`/device/get/${this.$route.params.id}`)
         .then((response) => {
           this.device = response.data as Device;
-          this.header_type_name = this.device.edges!.in_type!.device_type_name as string
+          this.header_type_name = this.device.edges!.in_type!
+            .device_type_name as string;
+          this.already = true;
         });
     },
   },

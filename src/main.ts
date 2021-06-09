@@ -7,6 +7,7 @@ import VueMeta from 'vue-meta';
 import Toasted from 'vue-toasted';
 import apiFunction from './global/api-function';
 import capitalize from './global/capitalize'
+import consts from './global/consts'
 
 Vue.config.productionTip = false
 Vue.use(SuiVue)
@@ -20,6 +21,7 @@ Vue.use(apiFunction,{
   baseURL: `${process.env.VUE_APP_ROOT_API}`
 })
 Vue.use(capitalize)
+Vue.use(consts)
 
 new Vue({
   router,

@@ -697,7 +697,6 @@ export default Vue.extend({
       portChannels: [] as poOption[],
       allLayers: [] as InterfaceLayer[],
       selectLayer: {} as InterfaceLayer,
-      notSupportL3: ["sg300"],
       selectedInterface: {
         edges: {
           have_vlans: [] as Vlan[],
@@ -864,14 +863,24 @@ export default Vue.extend({
               var data = response.data as InterfaceLayer[];
               this.allLayers = [];
               data.forEach((element) => {
-                if (
-                  !(
-                    this.notSupportL3.includes(
-                      this.deviceObj.edges!.in_platform!.device_platform_name
-                    ) && element.interface_layer == 3
-                  )
-                )
-                  this.allLayers.push(element);
+                switch (element.interface_layer) {
+                  case 2:
+                    if (
+                      !this.$notSupportL2.includes(
+                        this.deviceObj.edges!.in_type!.device_type_name!
+                      )
+                    )
+                      this.allLayers.push(element);
+                    break;
+                  case 3:
+                    if (
+                      !this.$notSupportL3.includes(
+                        this.deviceObj.edges!.in_platform!.device_platform_name
+                      )
+                    )
+                      this.allLayers.push(element);
+                    break;
+                }
               });
             });
 

@@ -132,7 +132,6 @@ export default Vue.extend({
         device_id: 0,
       },
       havePlotTopology: false,
-      canBeConfigList: ["l2switch", "l3switch"],
       topology: {
         name: null,
         nodeSize: 25,
@@ -209,7 +208,7 @@ export default Vue.extend({
       return false;
     },
     checkCanBeSetting(str: string) {
-      return this.canBeConfigList.includes(str) ? true : false;
+      return this.$canBeConfigList.includes(str) ? true : false;
     },
     getTopology() {
       this.$api_connection

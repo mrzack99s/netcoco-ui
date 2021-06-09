@@ -658,7 +658,6 @@ export default Vue.extend({
       deleteModal: false,
       allLayers: [] as InterfaceLayer[],
       selectLayer: {} as InterfaceLayer,
-      notSupportL3: ["sg300"],
     };
   },
   computed: {
@@ -782,7 +781,7 @@ export default Vue.extend({
               data.forEach((element) => {
                 if (
                   !(
-                    this.notSupportL3.includes(
+                    this.$notSupportL3.includes(
                       this.deviceObj.edges!.in_platform!.device_platform_name
                     ) && element.interface_layer == 3
                   )
