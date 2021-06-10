@@ -79,6 +79,7 @@ export default Vue.extend({
         .get(`/device/get/${this.device_id}`)
         .then((response) => {
           this.deviceObj = response.data as Device;
+          // eslint-disable-next-line
           this.deviceComitted = this.deviceObj.device_commit_config!;
         });
     },
