@@ -169,7 +169,6 @@
                     getInterfaceMode == 'Trunking'
                   "
                 >
-
                   <sui-form-field v-if="getInterfaceMode == 'Access'">
                     <label>VLANs</label>
                     <sui-dropdown
@@ -207,7 +206,6 @@
                     />
                   </sui-form-field>
                 </sui-form-fields>
-                
               </sui-form-field>
             </span>
             <span v-if="selectLayer.interface_layer == 3">
@@ -248,6 +246,7 @@
                       style="width: 50%"
                     />
                     <sui-label
+                      basic
                       pointing="left"
                       v-if="ipAddress.ip_address == ''"
                       >Ex. 172.31.255.254
@@ -257,7 +256,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="ipHasError"
-                      >Worng!, Ex. 172.31.255.254
+                      >Wrong!, Ex. 172.31.255.254
                     </sui-label>
                     <sui-label
                       basic
@@ -279,6 +278,7 @@
                       v-model="ipAddress.subnet_mask"
                     />
                     <sui-label
+                      basic
                       pointing="left"
                       v-if="ipAddress.subnet_mask == ''"
                       >Ex. 255.255.255.0
@@ -288,7 +288,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="subnetHasError"
-                      >Worng!, Ex. 255.255.255.0
+                      >Wrong!, Ex. 255.255.255.0
                     </sui-label>
                     <sui-label
                       basic
@@ -392,30 +392,30 @@
                     />
                   </sui-form-field>
                   <span v-if="getInterfaceMode == 'Trunking'">
-                  <sui-form-field>
-                    <label>VLANs</label>
-                    <sui-dropdown
-                      multiple
-                      fluid
-                      :options="vlans"
-                      placeholder="Vlans"
-                      search
-                      selection
-                      required
-                      v-model="selectedHaveVlans"
-                    />
-                  </sui-form-field>
-                  <sui-form-field>
-                    <label>Native VLAN</label>
-                    <sui-dropdown
-                      placeholder="Native Vlans"
-                      required
-                      search
-                      selection
-                      :options="vlans"
-                      v-model="selectedOption2"
-                    />
-                  </sui-form-field>
+                    <sui-form-field>
+                      <label>VLANs</label>
+                      <sui-dropdown
+                        multiple
+                        fluid
+                        :options="vlans"
+                        placeholder="Vlans"
+                        search
+                        selection
+                        required
+                        v-model="selectedHaveVlans"
+                      />
+                    </sui-form-field>
+                    <sui-form-field>
+                      <label>Native VLAN</label>
+                      <sui-dropdown
+                        placeholder="Native Vlans"
+                        required
+                        search
+                        selection
+                        :options="vlans"
+                        v-model="selectedOption2"
+                      />
+                    </sui-form-field>
                   </span>
                 </sui-form-fields>
               </sui-form-field>
@@ -447,7 +447,7 @@
                   </sui-form-field>
                 </sui-form-fields>
 
-               <sui-form-fields fields="two">
+                <sui-form-fields fields="two">
                   <sui-form-field>
                     <label>IP Address</label>
                     <sui-input
@@ -459,6 +459,7 @@
                       style="width: 50%"
                     />
                     <sui-label
+                      basic
                       pointing="left"
                       v-if="ipAddress.ip_address == ''"
                       >Ex. 172.31.255.254
@@ -468,7 +469,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="ipHasError"
-                      >Worng!, Ex. 172.31.255.254
+                      >Wrong!, Ex. 172.31.255.254
                     </sui-label>
                     <sui-label
                       basic
@@ -490,6 +491,7 @@
                       v-model="ipAddress.subnet_mask"
                     />
                     <sui-label
+                      basic
                       pointing="left"
                       v-if="ipAddress.subnet_mask == ''"
                       >Ex. 255.255.255.0
@@ -499,7 +501,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="subnetHasError"
-                      >Worng!, Ex. 255.255.255.0
+                      >Wrong!, Ex. 255.255.255.0
                     </sui-label>
                     <sui-label
                       basic
@@ -548,20 +550,22 @@
               <b>{{ selectedInterface.edges.native_on_vlan.vlan_id }} </b>
               <br />
             </span>
-            <span v-else-if="selectedInterface.edges.on_layer.interface_layer == 3">
+            <span
+              v-else-if="selectedInterface.edges.on_layer.interface_layer == 3"
+            >
               Interface name:
-              <b>Port-channel {{ selectedInterface.po_interface_id }} </b> <br />
+              <b>Port-channel {{ selectedInterface.po_interface_id }} </b>
+              <br />
               IP Address:
-              <b> {{ selectedInterface.edges.on_ip_address.ip_address  }} </b>
+              <b> {{ selectedInterface.edges.on_ip_address.ip_address }} </b>
               <br />
               Subnet Mask:
               <b>{{ selectedInterface.edges.on_ip_address.subnet_mask }} </b>
               <br />
             </span>
             <span v-else>
-              
               <b>None</b> <br />
-  
+
               <br />
             </span>
           </div>
@@ -606,13 +610,13 @@ export default Vue.extend({
   },
   data() {
     return {
-            ipAddrRegx:
+      ipAddrRegx:
         /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
       subnetRegx:
         /^(((255.){3}(255|254|252|248|240|224|192|128|0+))|((255.){2}(255|254|252|248|240|224|192|128|0+).0)|((255.)(255|254|252|248|240|224|192|128|0+)(.0+){2})|((255|254|252|248|240|224|192|128|0+)(.0+){3}))$/,
       ipHasError: false,
       subnetHasError: false,
-            ipAddress: {
+      ipAddress: {
         ip_address: "",
         subnet_mask: "",
       } as IPAddress,
@@ -740,16 +744,14 @@ export default Vue.extend({
         .then((response) => {
           this.allInterfaceMode = response.data as InterfaceMode[];
 
-          this.allInterfaceMode.forEach(
-            (element: InterfaceMode) => {
-              if (element.interface_mode != "EtherChannel")
-                this.options.push({
-                  text: element.interface_mode as string,
-                  value: this.options.length as number,
-                  type: element,
-                });
-            }
-          );
+          this.allInterfaceMode.forEach((element: InterfaceMode) => {
+            if (element.interface_mode != "EtherChannel")
+              this.options.push({
+                text: element.interface_mode as string,
+                value: this.options.length as number,
+                type: element,
+              });
+          });
         });
     },
     getallInterface() {
@@ -845,7 +847,7 @@ export default Vue.extend({
         return p.type.id == this.selectedInterface.edges?.native_on_vlan?.id;
       });
 
-      this.ipAddress = this.selectedInterface.edges!.on_ip_address!
+      this.ipAddress = this.selectedInterface.edges!.on_ip_address!;
 
       this.editModal = true;
     },
@@ -854,115 +856,119 @@ export default Vue.extend({
       this.deleteModal = true;
     },
     add() {
-      var temp = this.deviceObj;
-      temp.edges = {};
-      this.addInterface.po_interface_shutdown = this.interface_shutdown;
-      this.addInterface.edges!.mode = this.options[this.selectedOption].type;
-      this.addInterface.edges!.on_device! = temp;
-      this.addInterface.edges!.native_on_vlan! =
-        this.vlans[this.selectedOption2].type;
-
-      if (this.addInterface.edges?.mode.interface_mode == "Access") {
-        this.addInterface.edges!.have_vlans! = [];
-        this.addInterface.edges?.have_vlans?.push(
-          this.vlans[this.selectedAccessVlan].type
-        );
-      } else if (this.addInterface.edges?.mode.interface_mode == "Trunking") {
-        this.addInterface.edges!.have_vlans! = [];
-        this.selectedHaveVlans.forEach((item) => {
-          this.addInterface.edges?.have_vlans?.push(this.vlans[item].type);
-        });
-      }
-
-      this.selectedHaveVlans = [];
-      this.selectedAccessVlan = 0;
-      this.addInterface.edges!.on_layer! = this.selectLayer;
-      this.addInterface.edges!.on_ip_address! = this.ipAddress;
-      if (this.selectLayer.interface_layer == 3 && (this.ipHasError || this.subnetHasError)) {
-        this.$toasted.info("Please correct ip address or subnet mask")
+      if (
+        this.selectLayer.interface_layer == 3 &&
+        (this.ipHasError || this.subnetHasError)
+      ) {
+        this.$toasted.info("Please correct ip address or subnet mask");
       } else {
-        this.loader = true;
-      this.$api_connection
-        .secureAPI()
-        .post("/po-interface/create", this.addInterface)
-        .then(() => {
-          this.$toasted.success("Add port-channel interface success");
+        var temp = this.deviceObj;
+        temp.edges = {};
+        this.addInterface.po_interface_shutdown = this.interface_shutdown;
+        this.addInterface.edges!.mode = this.options[this.selectedOption].type;
+        this.addInterface.edges!.on_device! = temp;
+        this.addInterface.edges!.native_on_vlan! =
+          this.vlans[this.selectedOption2].type;
 
-          this.getallInterface();
-          this.addModal = false;
-          this.addInterface = {
-            edges: {
-              have_vlans: [] as Vlan[],
-              native_on_vlan: {} as Vlan,
-              mode: {} as InterfaceMode,
-              on_layer: {} as InterfaceLayer,
-              on_ip_address: {} as IPAddress,
-            },
-          } as PoInterface;
-          this.loader = false;
-        })
-        .catch((err) => {
-          if(err.response.data.error)
-            this.$toasted.error(this.$capitalize(err.response.data.error));
-          else
-            this.$toasted.error("Error!!");
-          this.loader = false;
-        });
+        if (this.addInterface.edges?.mode.interface_mode == "Access") {
+          this.addInterface.edges!.have_vlans! = [];
+          this.addInterface.edges?.have_vlans?.push(
+            this.vlans[this.selectedAccessVlan].type
+          );
+        } else if (this.addInterface.edges?.mode.interface_mode == "Trunking") {
+          this.addInterface.edges!.have_vlans! = [];
+          this.selectedHaveVlans.forEach((item) => {
+            this.addInterface.edges?.have_vlans?.push(this.vlans[item].type);
+          });
+        }
+
+        this.selectedHaveVlans = [];
+        this.selectedAccessVlan = 0;
+        this.addInterface.edges!.on_layer! = this.selectLayer;
+        this.addInterface.edges!.on_ip_address! = this.ipAddress;
+        this.loader = true;
+        this.$api_connection
+          .secureAPI()
+          .post("/po-interface/create", this.addInterface)
+          .then(() => {
+            this.$toasted.success("Add port-channel interface success");
+
+            this.getallInterface();
+            this.addModal = false;
+            this.addInterface = {
+              edges: {
+                have_vlans: [] as Vlan[],
+                native_on_vlan: {} as Vlan,
+                mode: {} as InterfaceMode,
+                on_layer: {} as InterfaceLayer,
+                on_ip_address: {} as IPAddress,
+              },
+            } as PoInterface;
+            this.loader = false;
+          })
+          .catch((err) => {
+            if (err.response.data.error)
+              this.$toasted.error(this.$capitalize(err.response.data.error));
+            else this.$toasted.error("Error!!");
+            this.loader = false;
+          });
       }
     },
     update() {
-      this.selectedInterface.edges!.mode =
-        this.options[this.selectedOption].type;
-      var temp = this.deviceObj;
-      temp.edges = {};
-      this.selectedInterface.po_interface_shutdown = this.interface_shutdown;
-      this.selectedInterface.edges!.on_device! = temp;
-
-      this.selectedInterface.edges!.native_on_vlan! =
-        this.vlans[this.selectedOption2].type;
-
-      if (this.selectedInterface.edges?.mode.interface_mode == "Access") {
-        this.selectedInterface.edges!.have_vlans! = [];
-        this.selectedInterface.edges?.have_vlans?.push(
-          this.vlans[this.selectedAccessVlan].type
-        );
-      } else if (
-        this.selectedInterface.edges?.mode.interface_mode == "Trunking"
+      if (
+        this.selectLayer.interface_layer == 3 &&
+        (this.ipHasError || this.subnetHasError)
       ) {
-        this.selectedInterface.edges!.have_vlans! = [];
-        this.selectedHaveVlans.forEach((item) => {
-          this.selectedInterface.edges?.have_vlans?.push(this.vlans[item].type);
-        });
-      }
-
-      this.selectedHaveVlans = [];
-      this.selectedInterface.edges!.on_layer! = this.selectLayer;
-      this.selectedInterface.edges!.on_ip_address! = this.ipAddress;
-
-      if (this.selectLayer.interface_layer == 3 && (this.ipHasError || this.subnetHasError)) {
-        this.$toasted.info("Please correct ip address or subnet mask")
+        this.$toasted.info("Please correct ip address or subnet mask");
       } else {
+        this.selectedInterface.edges!.mode =
+          this.options[this.selectedOption].type;
+        var temp = this.deviceObj;
+        temp.edges = {};
+        this.selectedInterface.po_interface_shutdown = this.interface_shutdown;
+        this.selectedInterface.edges!.on_device! = temp;
 
-        this.loader = true;
-      this.$api_connection
-        .secureAPI()
-        .post("/po-interface/edit", this.selectedInterface)
-        .then(() => {
-          this.$toasted.success(
-            "Update port-channel interface information success"
+        this.selectedInterface.edges!.native_on_vlan! =
+          this.vlans[this.selectedOption2].type;
+
+        if (this.selectedInterface.edges?.mode.interface_mode == "Access") {
+          this.selectedInterface.edges!.have_vlans! = [];
+          this.selectedInterface.edges?.have_vlans?.push(
+            this.vlans[this.selectedAccessVlan].type
           );
+        } else if (
+          this.selectedInterface.edges?.mode.interface_mode == "Trunking"
+        ) {
+          this.selectedInterface.edges!.have_vlans! = [];
+          this.selectedHaveVlans.forEach((item) => {
+            this.selectedInterface.edges?.have_vlans?.push(
+              this.vlans[item].type
+            );
+          });
+        }
 
-          this.getallInterface();
-          this.editModal = false;
-          this.loader = false;
-        })
-        .catch((err) => {
-          if(err.response.data.error)
-            this.$toasted.error(this.$capitalize(err.response.data.error));
-          else
-            this.$toasted.error("Error!!");
-          this.loader = false;
-        });
+        this.selectedHaveVlans = [];
+        this.selectedInterface.edges!.on_layer! = this.selectLayer;
+        this.selectedInterface.edges!.on_ip_address! = this.ipAddress;
+        this.loader = true;
+        this.$api_connection
+          .secureAPI()
+          .post("/po-interface/edit", this.selectedInterface)
+          .then(() => {
+            this.$toasted.success(
+              "Update port-channel interface information success"
+            );
+
+            this.getallInterface();
+            this.editModal = false;
+            this.loader = false;
+          })
+          .catch((err) => {
+            if (err.response.data.error)
+              this.$toasted.error(this.$capitalize(err.response.data.error));
+            else this.$toasted.error("Error!!");
+            this.loader = false;
+          });
       }
     },
     deleteInterfaceAction() {
@@ -982,7 +988,7 @@ export default Vue.extend({
           this.loader = false;
         });
     },
-  
+
     ipAddrValidation() {
       this.ipHasError = !this.ipAddrRegx.test(this.ipAddress.ip_address);
     },

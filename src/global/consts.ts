@@ -8,6 +8,8 @@ export default {
         Vue.prototype.$notSupportL2 = ["router"]
         Vue.prototype.$canBeConfigList = ["l2switch", "l3switch", "router"]
         Vue.prototype.$ablePortChannelConfig = ["l3switch", "l2switch"]
+        Vue.prototype.$ableVLANConfig = ["l3switch", "l2switch"]
+        Vue.prototype.$ableIpRouteConfig = ["router", "l3switch"]
     }
 }
 
@@ -17,5 +19,7 @@ declare module 'vue/types/vue' {
         $notSupportL2: string[]
         $canBeConfigList: string[]
         $ablePortChannelConfig: string[]
+        $ableVLANConfig: string[]
+        $ableIpRouteConfig: string[]
     }
 }

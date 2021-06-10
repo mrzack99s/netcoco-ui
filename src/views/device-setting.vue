@@ -20,11 +20,22 @@
     </sui-segment>
 
     <sui-tab :menu="{ vertical: true, fluid: true }" menu-position="left">
-      <sui-tab-pane title="Vlan Setting">
+      <sui-tab-pane
+        title="Vlan Setting"
+        v-if="$ableVLANConfig.includes(device.edges.in_type.device_type_name)"
+      >
         <VlanSetting :device_id="$route.params.id" />
       </sui-tab-pane>
       <sui-tab-pane title="Interface Setting">
         <InterfaceSetting :device_id="$route.params.id" />
+      </sui-tab-pane>
+      <sui-tab-pane
+        title="IP Static Routing Table Setting"
+        v-if="
+          $ableIpRouteConfig.includes(device.edges.in_type.device_type_name)
+        "
+      >
+        <IPStaticRoutingTable :device_id="$route.params.id" />
       </sui-tab-pane>
       <sui-tab-pane
         title="Port-channel Interface Setting"
@@ -48,12 +59,14 @@ import PoInterfaceSetting from "@/components/po-setting.vue";
 import CommitSetting from "@/components/commit-setting.vue";
 import VlanSetting from "@/components/vlan-setting.vue";
 import Device from "@/types/device";
+import IPStaticRoutingTable from "@/components/ip-static-routing.vue";
 export default Vue.extend({
   components: {
     InterfaceSetting,
     CommitSetting,
     VlanSetting,
     PoInterfaceSetting,
+    IPStaticRoutingTable,
   },
   data() {
     return {
@@ -69,6 +82,7 @@ export default Vue.extend({
         .get(`/device/get/${this.$route.params.id}`)
         .then((response) => {
           this.device = response.data as Device;
+          // eslint-disable-next-line
           this.header_type_name = this.device.edges!.in_type!
             .device_type_name as string;
           this.already = true;

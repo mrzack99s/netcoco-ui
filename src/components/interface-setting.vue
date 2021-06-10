@@ -277,7 +277,10 @@
                       v-model="ipAddress.ip_address"
                       style="width: 50%"
                     />
-                    <sui-label pointing="left" v-if="ipAddress.ip_address == ''"
+                    <sui-label
+                      basic
+                      pointing="left"
+                      v-if="ipAddress.ip_address == ''"
                       >Ex. 172.31.255.254
                     </sui-label>
                     <sui-label
@@ -285,7 +288,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="ipHasError"
-                      >Worng!, Ex. 172.31.255.254
+                      >Wrong!, Ex. 172.31.255.254
                     </sui-label>
                     <sui-label
                       basic
@@ -307,6 +310,7 @@
                       v-model="ipAddress.subnet_mask"
                     />
                     <sui-label
+                      basic
                       pointing="left"
                       v-if="ipAddress.subnet_mask == ''"
                       >Ex. 255.255.255.0
@@ -316,7 +320,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="subnetHasError"
-                      >Worng!, Ex. 255.255.255.0
+                      >Wrong!, Ex. 255.255.255.0
                     </sui-label>
                     <sui-label
                       basic
@@ -502,7 +506,10 @@
                       v-model="ipAddress.ip_address"
                       style="width: 50%"
                     />
-                    <sui-label pointing="left" v-if="ipAddress.ip_address == ''"
+                    <sui-label
+                      basic
+                      pointing="left"
+                      v-if="ipAddress.ip_address == ''"
                       >Ex. 172.31.255.254
                     </sui-label>
                     <sui-label
@@ -510,7 +517,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="ipHasError"
-                      >Worng!, Ex. 172.31.255.254
+                      >Wrong!, Ex. 172.31.255.254
                     </sui-label>
                     <sui-label
                       basic
@@ -532,6 +539,7 @@
                       v-model="ipAddress.subnet_mask"
                     />
                     <sui-label
+                      basic
                       pointing="left"
                       v-if="ipAddress.subnet_mask == ''"
                       >Ex. 255.255.255.0
@@ -541,7 +549,7 @@
                       color="red"
                       pointing="left"
                       v-else-if="subnetHasError"
-                      >Worng!, Ex. 255.255.255.0
+                      >Wrong!, Ex. 255.255.255.0
                     </sui-label>
                     <sui-label
                       basic
@@ -949,42 +957,42 @@ export default Vue.extend({
       this.deleteModal = true;
     },
     add() {
-      var temp = this.deviceObj;
-      temp.edges = {};
-      this.addInterface.interface_shutdown = this.interface_shutdown;
-      this.addInterface.edges!.mode = this.options[this.selectedOption].type;
-      this.addInterface.edges!.on_device! = temp;
-      this.addInterface.edges!.native_on_vlan! =
-        this.vlans[this.selectedOption2].type;
-
-      if (this.addInterface.edges?.mode.interface_mode == "Access") {
-        this.addInterface.edges!.have_vlans! = [];
-        this.addInterface.edges?.have_vlans?.push(
-          this.vlans[this.selectedAccessVlan].type
-        );
-      } else if (this.addInterface.edges?.mode.interface_mode == "Trunking") {
-        this.addInterface.edges!.have_vlans! = [];
-        this.selectedHaveVlans.forEach((item) => {
-          this.addInterface.edges?.have_vlans?.push(this.vlans[item].type);
-        });
-      } else if (
-        this.addInterface.edges?.mode.interface_mode == "EtherChannel"
-      ) {
-        this.addInterface.edges.on_po_interface =
-          this.portChannels[this.selectedPortChannel].type;
-      }
-
-      this.selectedHaveVlans = [];
-      this.selectedAccessVlan = 0;
-      this.addInterface.edges!.on_layer! = this.selectLayer;
-      this.addInterface.edges!.on_ip_address! = this.ipAddress;
-
       if (
         this.selectLayer.interface_layer == 3 &&
         (this.ipHasError || this.subnetHasError)
       ) {
         this.$toasted.info("Please correct ip address or subnet mask");
       } else {
+        var temp = this.deviceObj;
+        temp.edges = {};
+        this.addInterface.interface_shutdown = this.interface_shutdown;
+        this.addInterface.edges!.mode = this.options[this.selectedOption].type;
+        this.addInterface.edges!.on_device! = temp;
+        this.addInterface.edges!.native_on_vlan! =
+          this.vlans[this.selectedOption2].type;
+
+        if (this.addInterface.edges?.mode.interface_mode == "Access") {
+          this.addInterface.edges!.have_vlans! = [];
+          this.addInterface.edges?.have_vlans?.push(
+            this.vlans[this.selectedAccessVlan].type
+          );
+        } else if (this.addInterface.edges?.mode.interface_mode == "Trunking") {
+          this.addInterface.edges!.have_vlans! = [];
+          this.selectedHaveVlans.forEach((item) => {
+            this.addInterface.edges?.have_vlans?.push(this.vlans[item].type);
+          });
+        } else if (
+          this.addInterface.edges?.mode.interface_mode == "EtherChannel"
+        ) {
+          this.addInterface.edges.on_po_interface =
+            this.portChannels[this.selectedPortChannel].type;
+        }
+
+        this.selectedHaveVlans = [];
+        this.selectedAccessVlan = 0;
+        this.addInterface.edges!.on_layer! = this.selectLayer;
+        this.addInterface.edges!.on_ip_address! = this.ipAddress;
+
         this.loader = true;
         this.$api_connection
           .secureAPI()
@@ -1019,52 +1027,53 @@ export default Vue.extend({
       }
     },
     update() {
-      this.selectedInterface.edges!.mode =
-        this.options[this.selectedOption].type;
-      var temp = this.deviceObj;
-      temp.edges = {};
-      this.selectedInterface.interface_shutdown = this.interface_shutdown;
-      this.selectedInterface.edges!.on_device! = temp;
-      this.selectedInterface.edges!.on_layer! = this.selectLayer;
-
-      if (this.selectedOption2 != -1)
-        this.selectedInterface.edges!.native_on_vlan! =
-          this.vlans[this.selectedOption2].type;
-      else
-        this.selectedInterface.edges!.native_on_vlan = this.vlans.find(
-          (element) => {
-            return element.type!.vlan_id == 1;
-          }
-        )?.type;
-
-      if (this.selectedInterface.edges?.mode.interface_mode == "Access") {
-        this.selectedInterface.edges!.have_vlans! = [];
-        this.selectedInterface.edges?.have_vlans?.push(
-          this.vlans[this.selectedAccessVlan].type
-        );
-      } else if (
-        this.selectedInterface.edges?.mode.interface_mode == "Trunking"
-      ) {
-        this.selectedInterface.edges!.have_vlans! = [];
-        this.selectedHaveVlans.forEach((item) => {
-          this.selectedInterface.edges?.have_vlans?.push(this.vlans[item].type);
-        });
-      } else if (
-        this.selectedInterface.edges?.mode.interface_mode == "EtherChannel"
-      ) {
-        this.selectedInterface.edges.on_po_interface =
-          this.portChannels[this.selectedPortChannel].type;
-      }
-
-      this.selectedHaveVlans = [];
-      this.selectedInterface.edges!.on_ip_address! = this.ipAddress;
-
       if (
         this.selectLayer.interface_layer == 3 &&
         (this.ipHasError || this.subnetHasError)
       ) {
         this.$toasted.info("Please correct ip address or subnet mask");
       } else {
+        this.selectedInterface.edges!.mode =
+          this.options[this.selectedOption].type;
+        var temp = this.deviceObj;
+        temp.edges = {};
+        this.selectedInterface.interface_shutdown = this.interface_shutdown;
+        this.selectedInterface.edges!.on_device! = temp;
+        this.selectedInterface.edges!.on_layer! = this.selectLayer;
+
+        if (this.selectedOption2 != -1)
+          this.selectedInterface.edges!.native_on_vlan! =
+            this.vlans[this.selectedOption2].type;
+        else
+          this.selectedInterface.edges!.native_on_vlan = this.vlans.find(
+            (element) => {
+              return element.type!.vlan_id == 1;
+            }
+          )?.type;
+
+        if (this.selectedInterface.edges?.mode.interface_mode == "Access") {
+          this.selectedInterface.edges!.have_vlans! = [];
+          this.selectedInterface.edges?.have_vlans?.push(
+            this.vlans[this.selectedAccessVlan].type
+          );
+        } else if (
+          this.selectedInterface.edges?.mode.interface_mode == "Trunking"
+        ) {
+          this.selectedInterface.edges!.have_vlans! = [];
+          this.selectedHaveVlans.forEach((item) => {
+            this.selectedInterface.edges?.have_vlans?.push(
+              this.vlans[item].type
+            );
+          });
+        } else if (
+          this.selectedInterface.edges?.mode.interface_mode == "EtherChannel"
+        ) {
+          this.selectedInterface.edges.on_po_interface =
+            this.portChannels[this.selectedPortChannel].type;
+        }
+
+        this.selectedHaveVlans = [];
+        this.selectedInterface.edges!.on_ip_address! = this.ipAddress;
         this.loader = true;
 
         this.$api_connection
