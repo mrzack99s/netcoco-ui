@@ -139,6 +139,7 @@ export default Vue.extend({
         nodeData: [] as NodeOptions[],
         edgesData: [] as EdgeOptions[],
         nodeUnreachable: [] as number[],
+        // eslint-disable-next-line
         rawEdges: [] as any,
         state: {
           edgeFetched: false,
@@ -157,9 +158,11 @@ export default Vue.extend({
   },
   computed: {
     getTopologyName(): string {
+      // eslint-disable-next-line
       return this.selectedTopoElement.text!;
     },
     getNodeSize(): string {
+      // eslint-disable-next-line
       return `Node size: ${this.topology!.nodeSize}`;
     },
   },
@@ -208,7 +211,7 @@ export default Vue.extend({
       return false;
     },
     checkCanBeSetting(str: string) {
-      return str == "l2switch" ? true : false;
+      return this.$canBeConfigList.includes(str) ? true : false;
     },
     getTopology() {
       this.$api_connection

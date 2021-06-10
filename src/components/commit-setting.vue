@@ -2,7 +2,9 @@
   <div>
     <div class="ui card" style="width: 100%; height: 300px; padding-top: 2em">
       <div class="content" v-if="deviceComitted">
-        <h2 class="center aligned ui header">This device [{{ deviceObj.device_name }}] has been committed.</h2>
+        <h2 class="center aligned ui header">
+          This device [{{ deviceObj.device_name }}] has been committed.
+        </h2>
         <div class="center aligned description">
           <sui-button
             primary
@@ -77,22 +79,24 @@ export default Vue.extend({
         .get(`/device/get/${this.device_id}`)
         .then((response) => {
           this.deviceObj = response.data as Device;
+          // eslint-disable-next-line
           this.deviceComitted = this.deviceObj.device_commit_config!;
         });
     },
     commitAction() {
-      this.loader = true
+      this.loader = true;
       this.$api_connection
         .secureAPI()
         .post("/net-automation/commit", this.deviceObj)
         .then(() => {
-           this.$toasted.success("Commit configuration success")
-           this.commitModal = false
-           this.loader = false
-           this.getDevice()
-        }).catch(()=>{
-this.$toasted.error("Commit configuration failed!")
+          this.$toasted.success("Commit configuration success");
+          this.commitModal = false;
+          this.loader = false;
+          this.getDevice();
         })
+        .catch(() => {
+          this.$toasted.error("Commit configuration failed!");
+        });
     },
   },
   mounted() {

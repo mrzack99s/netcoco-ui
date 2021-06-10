@@ -2,6 +2,9 @@ import DeviceType from "./device-type"
 import DevicePlatform from "./device-platform"
 import Interface from "./interface";
 import Vlan from "./vlan";
+import PoInterface from "./po-interface";
+import IPStaticRouting from "./ip-static-routing";
+import IPAddress from "./ip-address";
 
 interface Device {
     id?: number
@@ -15,8 +18,11 @@ interface Device {
     edges?: {
         in_type?: DeviceType
         interfaces?: Interface[]
+        po_interfaces?: PoInterface[]
         in_platform?: DevicePlatform
         store_vlans?: Vlan[]
+        ip_static_routing?: IPStaticRouting[]
+        have_ip_addresses?: IPAddress[]
     }
 }
 

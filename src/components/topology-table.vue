@@ -279,7 +279,6 @@ export default Vue.extend({
         });
     },
     deleteTopologyAction() {
-      console.log(this.selectedTopology);
       this.$api_connection
         .secureAPI()
         .delete(`/topology/delete/${this.selectedTopology.id}`)

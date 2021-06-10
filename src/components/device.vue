@@ -580,8 +580,6 @@ export default Vue.extend({
         var prefix = this.net_interface.prefix;
         var interFace = {
           interface_name: prefix.replaceAll("x", `${i}`),
-          interface_vlan: "",
-          interface_native_vlan: "",
           edges: {
             mode: this.allInterfaceMode.find((element) => {
               return element.interface_mode == "None";
@@ -597,12 +595,13 @@ export default Vue.extend({
       this.$api_connection
         .secureAPI()
         .post("/net-interface/create-range", this.net_interface.allInt)
-        .then((response) => {
-          this.net_interface.allInt = response.data;
+        .then(() => {
+          this.net_interface.allInt = []
 
           this.$toasted.success("Generate interface success");
           this.addIntModal = false;
           this.loader = false;
+          
         })
         .catch(() => {
           this.$toasted.error("Generate interface failed!");
@@ -620,7 +619,8 @@ export default Vue.extend({
       );
       this.selectedOption = deviceTypeIndex;
       const platformIndex = this.options2.findIndex(
-        (element) => element.type.id == this.selectedDevice.edges?.in_platform?.id
+        (element) =>
+          element.type.id == this.selectedDevice.edges?.in_platform?.id
       );
       this.selectedOption2 = platformIndex;
       this.editModal = true;
@@ -635,9 +635,8 @@ export default Vue.extend({
     },
     add() {
       this.addDevice.edges!.in_type = this.options[this.selectedOption].type;
-      this.addDevice.edges!.in_platform = this.options2[
-        this.selectedOption2
-      ].type;
+      this.addDevice.edges!.in_platform =
+        this.options2[this.selectedOption2].type;
       this.loader = true;
 
       this.$api_connection
@@ -649,8 +648,10 @@ export default Vue.extend({
           this.getAllDevice();
           this.addModal = false;
           this.addDevice = {
+            device_ssh_port: 22,
             edges: {
               in_type: {} as DeviceType,
+              in_platform: {} as DevicePlatform,
             },
           } as Device;
           this.loader = false;
@@ -661,12 +662,10 @@ export default Vue.extend({
         });
     },
     update() {
-      this.selectedDevice.edges!.in_type = this.options[
-        this.selectedOption
-      ].type;
-      this.selectedDevice.edges!.in_platform = this.options2[
-        this.selectedOption2
-      ].type;
+      this.selectedDevice.edges!.in_type =
+        this.options[this.selectedOption].type;
+      this.selectedDevice.edges!.in_platform =
+        this.options2[this.selectedOption2].type;
 
       this.loader = true;
 
