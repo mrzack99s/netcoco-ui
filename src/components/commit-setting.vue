@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <div class="ui card" style="width: 100%; height: 300px; padding-top: 2em">
       <div class="content" v-if="deviceComitted">
         <h2 class="center aligned ui header">
@@ -70,18 +75,22 @@ export default Vue.extend({
       commitModal: false,
       deviceObj: {} as Device,
       deviceComitted: false,
+      already: false
     };
   },
   methods: {
     getDevice() {
+      this.already = false
       this.$api_connection
         .secureAPI()
-        .get(`/device/get/${this.device_id}`)
+        .get(`/device/get-lite/${this.device_id}`)
         .then((response) => {
           this.deviceObj = response.data as Device;
           // eslint-disable-next-line
           this.deviceComitted = this.deviceObj.device_commit_config!;
-        });
+        }).finally(() => {
+          this.already = true
+        })
     },
     commitAction() {
       this.loader = true;

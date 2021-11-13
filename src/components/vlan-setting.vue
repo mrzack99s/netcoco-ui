@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <sui-table celled>
       <sui-table-header full-width>
         <sui-table-row>
@@ -157,6 +162,7 @@ export default Vue.extend({
       addModal: false,
       deleteModal: false,
       deviceObj: {} as Device,
+      already: false,
     };
   },
   computed: {
@@ -190,14 +196,17 @@ export default Vue.extend({
       this.table.currentPagination = pNumber;
     },
     getAllVlan() {
+      this.already = false
       this.$api_connection
         .secureAPI()
-        .get(`/device/get/${this.device_id}`)
+        .get(`/device/get-lite/${this.device_id}`)
         .then((response) => {
           this.deviceObj = response.data as Device;
           this.allVlan = this.deviceObj.edges?.store_vlans as Vlan[];
           if (this.allVlan.length > 0) this.haveVlan = true;
-        });
+        }).finally(() => {
+          this.already = true
+        })
     },
     deleteVlan(i: number) {
       this.selectedVlan = this.table.showTable[i];

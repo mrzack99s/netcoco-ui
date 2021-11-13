@@ -65,19 +65,26 @@
             v-if="havePlotTopology"
           ></div>
           <div style="width: 100%; height: 300px; padding-top: 2em" v-else>
-            <h2 class="center aligned ui header">Not have a plot of topology</h2>
-            <div class="center aligned description">
-              <p>Please plot your topology</p>
-              <router-link to="/topology">
-                <sui-button
-                  primary
-                  type="button"
-                  size="small"
-                  style="margin-top: 1em"
-                  >Create topology</sui-button
-                >
-              </router-link>
-            </div>
+              <div v-if="!already">
+                <sui-dimmer active inverted>
+                  <sui-loader size="huge">Loading</sui-loader>
+                </sui-dimmer>
+              </div>
+              <div v-else>
+                <h2 class="center aligned ui header">Not have a plot of topology</h2>
+                <div class="center aligned description">
+                  <p>Please plot your topology</p>
+                  <router-link to="/topology">
+                    <sui-button
+                      primary
+                      type="button"
+                      size="small"
+                      style="margin-top: 1em"
+                      >Create topology</sui-button
+                    >
+                  </router-link>
+                </div>
+              </div>
           </div>
         </sui-card-content>
       </sui-card>
@@ -154,6 +161,7 @@ export default Vue.extend({
         GREEN: "green",
         RED: "#C5000B",
       },
+      already: false
     };
   },
   computed: {
@@ -214,6 +222,7 @@ export default Vue.extend({
       return this.$canBeConfigList.includes(str) ? true : false;
     },
     getTopology() {
+      this.already = false
       this.$api_connection
         .secureAPI()
         .get(`/device-type/get`)
@@ -302,7 +311,9 @@ export default Vue.extend({
               } else {
                 this.havePlotTopology = false;
               }
-            });
+            }).finally(() => {
+          this.already = true
+          })
         });
     },
     createEdge() {

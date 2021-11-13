@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <sui-table celled>
       <sui-table-header full-width>
         <sui-table-row>
@@ -80,6 +85,7 @@ export default Vue.extend({
       editModal: false,
       addModal: false,
       deleteModal: false,
+      already: false
     };
   },
   computed: {
@@ -113,13 +119,16 @@ export default Vue.extend({
       this.table.currentPagination = pNumber;
     },
     getAllDeviceType() {
+      this.already = false
       this.$api_connection
         .secureAPI()
         .get("/device-type/get")
         .then((response) => {
           this.allDeviceType = response.data as DeviceType[];
           if (this.allDeviceType.length > 0) this.haveDeviceType = true;
-        });
+        }).finally(() => {
+          this.already = true
+        })
     },
   },
   mounted() {

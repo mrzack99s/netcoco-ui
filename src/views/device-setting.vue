@@ -23,10 +23,11 @@
       <sui-tab-pane
         title="Vlan Setting"
         v-if="$ableVLANConfig.includes(device.edges.in_type.device_type_name)"
+        style="min-height: 200px"
       >
         <VlanSetting :device_id="$route.params.id" />
       </sui-tab-pane>
-      <sui-tab-pane title="Interface Setting">
+      <sui-tab-pane title="Interface Setting" style="min-height: 200px">
         <InterfaceSetting :device_id="$route.params.id" />
       </sui-tab-pane>
       <sui-tab-pane
@@ -34,6 +35,7 @@
         v-if="
           $ableIpRouteConfig.includes(device.edges.in_type.device_type_name)
         "
+        style="min-height: 200px"
       >
         <IPStaticRoutingTable :device_id="$route.params.id" />
       </sui-tab-pane>
@@ -42,10 +44,11 @@
         v-if="
           $ablePortChannelConfig.includes(device.edges.in_type.device_type_name)
         "
+        style="min-height: 200px"
       >
         <PoInterfaceSetting :device_id="$route.params.id" />
       </sui-tab-pane>
-      <sui-tab-pane title="Commit Setting">
+      <sui-tab-pane title="Commit Setting" style="min-height: 200px">
         <CommitSetting :device_id="$route.params.id" />
       </sui-tab-pane>
     </sui-tab>
@@ -79,7 +82,7 @@ export default Vue.extend({
     getDevice() {
       this.$api_connection
         .secureAPI()
-        .get(`/device/get/${this.$route.params.id}`)
+        .get(`/device/get-lite/${this.$route.params.id}`)
         .then((response) => {
           this.device = response.data as Device;
           // eslint-disable-next-line

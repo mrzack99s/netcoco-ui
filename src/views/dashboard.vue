@@ -15,7 +15,7 @@
     </sui-segment>
 
     <sui-tab :menu="{ vertical: true, fluid: true }" menu-position="left">
-      <sui-tab-pane title="Topology">
+      <sui-tab-pane title="Topology" style="min-height: 200px">
         <Topology height="450px" />
       </sui-tab-pane>
     </sui-tab>

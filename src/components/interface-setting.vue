@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <sui-table celled>
       <sui-table-header full-width>
         <sui-table-row>
@@ -729,6 +734,7 @@ export default Vue.extend({
       editModal: false,
       addModal: false,
       deleteModal: false,
+      already: false
     };
   },
   computed: {
@@ -810,6 +816,7 @@ export default Vue.extend({
       this.table.currentPagination = pNumber;
     },
     getAllInterfaceMode() {
+      
       this.$api_connection
         .secureAPI()
         .get("/net-interface-mode/get")
@@ -825,9 +832,11 @@ export default Vue.extend({
               });
             }
           );
+          
         });
     },
     getallInterface() {
+      this.already = false
       this.allInterface = [] as Interface[];
       this.$api_connection
         .secureAPI()
@@ -893,7 +902,9 @@ export default Vue.extend({
             });
 
           if (this.allInterface) this.haveInterface = true;
-        });
+        }).finally(() => {
+          this.already = true
+        })
     },
     edit(i: number) {
       if (!this.table.showTable[i].edges!.have_vlans)

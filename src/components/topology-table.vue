@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <sui-table celled>
       <sui-table-header full-width>
         <sui-table-row>
@@ -200,6 +205,7 @@ export default Vue.extend({
       editModal: false,
       addModal: false,
       deleteModal: false,
+      already: false
     };
   },
   computed: {
@@ -234,13 +240,16 @@ export default Vue.extend({
       this.table.currentPagination = pNumber;
     },
     getAllTopology() {
+      this.already = false
       this.$api_connection
         .secureAPI()
         .get("/topology/get")
         .then((response) => {
           this.allTopology = response.data as TopologyType[];
-          if (this.allTopology.length > 0) this.haveTopology = true;
-        });
+          if (this.allTopology.length > 0) this.haveTopology = true;0
+        }).finally(() => {
+          this.already = true
+        })
     },
     edit(i: number) {
       this.selectedTopology = this.table.showTable[i];

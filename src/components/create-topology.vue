@@ -33,8 +33,14 @@
       </sui-grid>
 
       <sui-card style="width: 100%">
-        <sui-card-content>
-          <div id="topo" ref="topo" :style="{ height: $props.height }"></div>
+        <sui-card-content>   
+          <div id="topo" ref="topo" :style="{ height: $props.height }">
+            <div v-if="!already">
+              <sui-dimmer active inverted>
+                <sui-loader size="huge">Loading</sui-loader>
+              </sui-dimmer>
+            </div> 
+          </div>
         </sui-card-content>
       </sui-card>
     </div>
@@ -219,6 +225,7 @@ export default Vue.extend({
       edge: {} as EdgeMap,
       deviceMap: {} as DeviceMap,
       deleteMapID: 0,
+      already: false
     };
   },
   computed: {
@@ -278,6 +285,7 @@ export default Vue.extend({
       return false;
     },
     getTopology() {
+      
       this.$api_connection
         .secureAPI()
         .get(`/device-type/get`)
@@ -295,6 +303,7 @@ export default Vue.extend({
           this.topology.groupNode = localData;
         });
 
+      this.already = false
       this.$api_connection
         .secureAPI()
         .get(`/topology/get/${this.selectedTopoElement.value}`)
@@ -361,7 +370,10 @@ export default Vue.extend({
               this.topology.options
             );
           }
-        });
+        }).finally(() => {
+          this.already = true
+        })
+        
     },
     deleteClick() {
       this.allDeleteEdge.length = 0;

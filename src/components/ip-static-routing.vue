@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <sui-table celled>
       <sui-table-header full-width>
         <sui-table-row>
@@ -143,7 +148,7 @@
                     >Subnet Mask is correct.
                   </sui-label>
                 </sui-form-field>
-                <sui-form-field>
+                <sui-form-field v-if="!addIPRoute.brd_interface">
                   <label>Next Hop Address</label>
                   <sui-dropdown
                     placeholder="Next Hop Address"
@@ -295,6 +300,7 @@ export default Vue.extend({
       } as IPStaticRouting,
       addModal: false,
       deleteModal: false,
+      already: false
     };
   },
   computed: {
@@ -377,6 +383,7 @@ export default Vue.extend({
         });
     },
     getAllRoute() {
+      this.already = false
       this.$api_connection
         .secureAPI()
         .get(`/device/get/${this.device_id}`)
@@ -396,7 +403,9 @@ export default Vue.extend({
           this.allRoute = this.deviceObj.edges!.ip_static_routing!;
 
           if (this.allRoute) this.haveRoute = true;
-        });
+        }).finally(() => {
+          this.already = true
+        })
     },
     deleteClick(i: number) {
       this.selectedRoute = this.table.showTable[i];
@@ -411,8 +420,11 @@ export default Vue.extend({
         this.addIPRoute.edges!.on_device = this.deviceObj;
         this.addIPRoute.edges!.on_interface =
           this.options2[this.selectedOption2].type;
-        this.addIPRoute.next_hop =
-          this.options[this.selectedOption].type.ip_address;
+        
+        if(!this.addIPRoute.brd_interface)
+          this.addIPRoute.next_hop = this.options[this.selectedOption].type.ip_address;
+        else
+          this.addIPRoute.next_hop = "0.0.0.0"
 
         this.loader = true;
         this.$api_connection

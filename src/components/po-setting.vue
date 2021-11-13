@@ -1,5 +1,10 @@
 <template>
-  <div>
+  <div v-if="!already">
+    <sui-dimmer active inverted>
+      <sui-loader size="huge">Loading</sui-loader>
+    </sui-dimmer>
+  </div>
+  <div v-else>
     <sui-table celled>
       <sui-table-header full-width>
         <sui-table-row>
@@ -662,6 +667,7 @@ export default Vue.extend({
       deleteModal: false,
       allLayers: [] as InterfaceLayer[],
       selectLayer: {} as InterfaceLayer,
+      already: false
     };
   },
   computed: {
@@ -756,9 +762,10 @@ export default Vue.extend({
     },
     getallInterface() {
       this.allInterface = [] as PoInterface[];
+      this.already = false
       this.$api_connection
         .secureAPI()
-        .get(`/device/get/${this.device_id}`)
+        .get(`/device/get-po-int-only/${this.device_id}`)
         .then((response) => {
           this.deviceObj = response.data as Device;
 
@@ -793,7 +800,9 @@ export default Vue.extend({
             });
 
           if (this.allInterface) this.haveInterface = true;
-        });
+        }).finally(() => {
+          this.already = true
+        })
     },
     edit(i: number) {
       if (!this.table.showTable[i].edges!.have_vlans)

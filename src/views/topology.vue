@@ -10,10 +10,10 @@
       </h2>
     </sui-segment>
   <sui-tab :menu="{ vertical: true, fluid: true }" menu-position="left">
-    <sui-tab-pane title="Create a topology">
+    <sui-tab-pane title="Create a topology" style="min-height: 200px">
         <TopologyTable />
     </sui-tab-pane>
-    <sui-tab-pane title="Device mapping to topology">
+    <sui-tab-pane title="Device mapping to topology" style="min-height: 200px">
         <CreateTopology height="500px" />
     </sui-tab-pane>
   </sui-tab>
